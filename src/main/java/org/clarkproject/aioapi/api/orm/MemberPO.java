@@ -3,6 +3,8 @@ package org.clarkproject.aioapi.api.orm;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.clarkproject.aioapi.api.obj.MemberRole;
+import org.clarkproject.aioapi.api.obj.MemberStatus;
 
 import java.net.InetAddress;
 import java.time.LocalDate;
@@ -30,7 +32,7 @@ public class MemberPO {
     private InetAddress ip;
 
     @Column(name = "wallet_id")
-    private Integer walletId;
+    private Long walletId;
 
     @Column(nullable = false, unique = true)
     private String email;

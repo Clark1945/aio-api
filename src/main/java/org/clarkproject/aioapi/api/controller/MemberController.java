@@ -3,7 +3,7 @@ package org.clarkproject.aioapi.api.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import org.clarkproject.aioapi.api.obj.Member;
 import org.clarkproject.aioapi.api.orm.MemberPO;
-import org.clarkproject.aioapi.api.orm.ResponseStatusMessage;
+import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
 import org.clarkproject.aioapi.api.service.MemberService;
 import org.clarkproject.aioapi.api.tool.MemberMapper;
 import org.clarkproject.aioapi.api.tool.ValidationException;
@@ -38,7 +38,7 @@ public class MemberController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
-        boolean isMemberExisted = memberService.findActiveAccount(member).isPresent();
+        boolean isMemberExisted = memberService.findActiveAccount(member.getAccount()).isPresent();
         if (isMemberExisted) {
             HashMap<String, String> errors = new HashMap<>();
             errors.put("status", ResponseStatusMessage.ERROR.getValue());

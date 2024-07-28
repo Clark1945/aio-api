@@ -2,8 +2,8 @@ package org.clarkproject.aioapi.api.tool;
 
 import org.clarkproject.aioapi.api.obj.Member;
 import org.clarkproject.aioapi.api.orm.MemberPO;
-import org.clarkproject.aioapi.api.orm.MemberRole;
-import org.clarkproject.aioapi.api.orm.MemberStatus;
+import org.clarkproject.aioapi.api.obj.MemberRole;
+import org.clarkproject.aioapi.api.obj.MemberStatus;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

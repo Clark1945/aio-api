@@ -25,7 +25,7 @@ class AioApiApplicationTests {
     @Test
     void optionalTest1() {
         Mockito.when(memberRepository.findByAccount(Mockito.isNull())).thenReturn(null);
-        Optional<MemberPO> memberPO1 = memberService.findActiveAccount(new Member());
+        Optional<MemberPO> memberPO1 = memberService.findActiveAccount(null);
         assert !memberPO1.isPresent();
     }
 
@@ -34,7 +34,7 @@ class AioApiApplicationTests {
         MemberPO memberPOTest = new MemberPO();
         memberPOTest.setStatus("INACTIVE");
         Mockito.when(memberRepository.findByAccount(Mockito.isNull())).thenReturn(memberPOTest);
-        Optional<MemberPO> memberPO1 = memberService.findActiveAccount(new Member());
+        Optional<MemberPO> memberPO1 = memberService.findActiveAccount(null);
         assert !memberPO1.isPresent();
     }
 

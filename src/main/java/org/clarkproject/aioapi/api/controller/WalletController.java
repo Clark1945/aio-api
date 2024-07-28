@@ -1,4 +1,133 @@
 package org.clarkproject.aioapi.api.controller;
 
+import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
+import org.clarkproject.aioapi.api.obj.TransactionInfo;
+import org.clarkproject.aioapi.api.service.WalletService;
+import org.clarkproject.aioapi.api.tool.ValidationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+
+@RestController
+@RequestMapping("/api/1.0")
 public class WalletController {
+
+    private WalletService walletService;
+
+    public WalletController(WalletService walletService) {
+        this.walletService = walletService;
+    }
+
+    @PostMapping("/wallet")
+    public ResponseEntity openWallet(@RequestBody HashMap<String, String> reqMap) {
+        String account = reqMap.get("account");
+        if (account == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
+        }
+
+        try {
+            boolean isOpen = walletService.openWallet(account);
+            if (isOpen) {
+                HashMap<String, String> result = new HashMap<>();
+                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+                result.put("message", "Wallet open successfully");
+                return ResponseEntity
+                        .ok()
+                        .body(result);
+            } else {
+                HashMap<String, String> error = new HashMap<>();
+                error.put("status", ResponseStatusMessage.ERROR.getValue());
+                error.put("message", "Wallt open Fail!");
+                return ResponseEntity
+                        .badRequest()
+                        .body(error);
+            }
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @GetMapping("/wallet")
+    public ResponseEntity checkWalletBalance(@RequestBody HashMap<String, String> reqMap) {
+        String account = reqMap.get("account");
+        if (account == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
+        }
+        try {
+            BigDecimal amt = walletService.queryAccount(account).getAmt().setScale(0);
+            HashMap<String, Object> result = new HashMap<>();
+            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+            result.put("message", "Wallet query successfully");
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("balance", amt);
+            result.put("info", map);
+            return ResponseEntity.ok().body(result);
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @PostMapping("/deposit")
+    public ResponseEntity deposit(@RequestBody TransactionInfo transactionInfo) {
+        try {
+            TransactionInfo.depositCheck(transactionInfo);
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+
+        try {
+            boolean isSuccess = walletService.deposit(transactionInfo);
+            if (isSuccess) {
+                HashMap<String, String> result = new HashMap<>();
+                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+                result.put("message", "Wallet Deposit successfully");
+                return ResponseEntity
+                        .ok()
+                        .body(result);
+            } else {
+                HashMap<String, String> error = new HashMap<>();
+                error.put("status", ResponseStatusMessage.ERROR.getValue());
+                error.put("message", "Wallet Deposit Fail!");
+                return ResponseEntity
+                        .badRequest()
+                        .body(error);
+            }
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity withdraw(Long id) {
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity transfer(Long id) {
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/wallet_record")
+    public ResponseEntity getWalletRecord(Long id) {
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/wallet")
+    public ResponseEntity freeze(Long id) {
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/wallet")
+    public ResponseEntity deactivate(Long id) {
+        return ResponseEntity.ok().build();
+    }
 }

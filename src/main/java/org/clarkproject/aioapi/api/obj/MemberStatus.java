@@ -1,4 +1,4 @@
-package org.clarkproject.aioapi.api.orm;
+package org.clarkproject.aioapi.api.obj;
 
 public enum MemberStatus {
     ACTIVE,

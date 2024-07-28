@@ -1,9 +1,6 @@
 package org.clarkproject.aioapi.api.obj;
 
 import lombok.*;
-import org.clarkproject.aioapi.api.orm.MemberPO;
-import org.clarkproject.aioapi.api.orm.MemberRole;
-import org.clarkproject.aioapi.api.orm.MemberStatus;
 import org.clarkproject.aioapi.api.tool.ValidationException;
 
 import java.net.InetAddress;

@@ -2,10 +2,10 @@ package org.clarkproject.aioapi.api.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.clarkproject.aioapi.api.obj.Member;
-import org.clarkproject.aioapi.api.orm.MemberConfig;
+import org.clarkproject.aioapi.api.obj.MemberConfig;
 import org.clarkproject.aioapi.api.orm.MemberPO;
-import org.clarkproject.aioapi.api.orm.MemberRole;
-import org.clarkproject.aioapi.api.orm.MemberStatus;
+import org.clarkproject.aioapi.api.obj.MemberRole;
+import org.clarkproject.aioapi.api.obj.MemberStatus;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.tool.ValidationException;
 import org.springframework.stereotype.Service;
@@ -40,8 +40,8 @@ public class MemberService {
         }
     }
 
-    public Optional<MemberPO> findActiveAccount(Member member) {
-        return Optional.ofNullable(memberRepository.findByAccount(member.getAccount()))
+    public Optional<MemberPO> findActiveAccount(String account) {
+        return Optional.ofNullable(memberRepository.findByAccount(account))
                 .filter(m -> m.getStatus().equals(MemberStatus.ACTIVE.name()));
     }
 
