@@ -6,6 +6,7 @@ public class TransactionInfo {
     String account;
     int amount;
     String description;
+    String targetAccount;
 
     public static void depositCheck(TransactionInfo transactionInfo) throws ValidationException {
         if (transactionInfo.getAccount() == null || transactionInfo.getAccount().isEmpty()) {
@@ -13,6 +14,13 @@ public class TransactionInfo {
         }
         if (transactionInfo.getAmount() <= 0) {
             throw new ValidationException("Amount must be greater than 0");
+        }
+    }
+
+    public static void transferCheck(TransactionInfo transactionInfo) throws ValidationException {
+        depositCheck(transactionInfo);
+        if (transactionInfo.getTargetAccount() == null || transactionInfo.getTargetAccount().isEmpty()) {
+            throw new ValidationException("ReceiverId cannot be null");
         }
     }
 
@@ -38,5 +46,13 @@ public class TransactionInfo {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getTargetAccount() {
+        return targetAccount;
+    }
+
+    public void setTargetAccount(String targetAccount) {
+        this.targetAccount = targetAccount;
     }
 }

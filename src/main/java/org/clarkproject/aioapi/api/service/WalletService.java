@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service("WalletService")
@@ -91,6 +93,124 @@ public class WalletService {
             walletRepository.save(walletPO);
             return true;
         }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean withdraw(TransactionInfo transactionInfo) throws ValidationException {
+        WalletPO walletPO = queryAccount(transactionInfo.getAccount());
+        BigDecimal fee = new BigDecimal(1);
+
+        WalletTransactionPO walletTransactionPO = new WalletTransactionPO();
+        walletTransactionPO.setWallet(walletPO);
+        walletTransactionPO.setCompleteTime(LocalDateTime.now());
+        walletTransactionPO.setTxType(TransactionType.WITHDRAWAL.name());
+        walletTransactionPO.setAmt(new BigDecimal(transactionInfo.getAmount()));
+        walletTransactionPO.setTransactionStatus(TransactionStatus.COMPLETED.name());
+        walletTransactionPO.setTransactionId(UUID.randomUUID());
+        walletTransactionPO.setFee(fee); // 酌收手續費
+        walletTransactionPO.setDescription(transactionInfo.getDescription());
+
+        walletPO.setAmt(walletPO.getAmt().subtract(new BigDecimal(transactionInfo.getAmount())).subtract(fee));
+        walletPO.setLastTxTime(LocalDateTime.now());
+        try {
+            transactionRepository.save(walletTransactionPO);
+            walletRepository.save(walletPO);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean transfer(TransactionInfo transactionInfo) throws ValidationException {
+        WalletPO walletPO = queryAccount(transactionInfo.getAccount());
+        BigDecimal fee = new BigDecimal(1);
+
+        WalletTransactionPO walletTransactionPO = new WalletTransactionPO();
+        walletTransactionPO.setWallet(walletPO);
+        walletTransactionPO.setCompleteTime(LocalDateTime.now());
+        walletTransactionPO.setTxType(TransactionType.TRANSFER.name());
+        walletTransactionPO.setAmt(new BigDecimal(transactionInfo.getAmount()));
+        walletTransactionPO.setTransactionStatus(TransactionStatus.COMPLETED.name());
+        walletTransactionPO.setTransactionId(UUID.randomUUID());
+        walletTransactionPO.setFee(fee); // 酌收手續費
+        walletTransactionPO.setDescription(transactionInfo.getDescription());
+        WalletPO targetWalletPO = queryAccount(transactionInfo.getTargetAccount());
+        walletTransactionPO.setReceiver(targetWalletPO.getId());
+
+        walletPO.setAmt(walletPO.getAmt().subtract(new BigDecimal(transactionInfo.getAmount())).subtract(fee));
+        walletPO.setLastTxTime(LocalDateTime.now());
+        try {
+            transactionRepository.save(walletTransactionPO);
+            walletRepository.save(walletPO);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<WalletTransactionPO> getWalletRecord(TransactionInfo transactionInfo) throws ValidationException {
+        MemberPO memberPO = memberRepository.findByAccount(transactionInfo.getAccount());
+        if (memberPO == null) {
+            throw new ValidationException("account not found");
+        }
+        if (!memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
+            throw new ValidationException("account not active");
+        }
+        WalletPO walletPO = walletRepository.findById(memberPO.getWalletId())
+                .orElseThrow(() -> new ValidationException("wallet not found"));
+        if (!walletPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
+            throw new ValidationException("walletPO not active");
+        }
+
+        return transactionRepository.findAllByWalletId(walletPO.getId())
+                .orElseThrow(()-> new ValidationException("wallet not found"));
+    }
+
+    public boolean freeze(TransactionInfo transactionInfo) throws ValidationException {
+        MemberPO memberPO = memberRepository.findByAccount(transactionInfo.getAccount());
+        if (memberPO == null) {
+            throw new ValidationException("account not found");
+        }
+        if (!memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
+            throw new ValidationException("account not active");
+        }
+        WalletPO walletPO = walletRepository.findById(memberPO.getWalletId())
+                .orElseThrow(() -> new ValidationException("wallet not found"));
+        walletPO.setStatus(WalletStatus.SUSPENDED.name());
+
+        try {
+            walletRepository.save(walletPO);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deactivate(TransactionInfo transactionInfo) throws ValidationException {
+        boolean isAdmin = memberRepository.findByAccount(transactionInfo.getAccount()).getRole().equals(MemberRole.ADMIN.name());
+        if (!isAdmin) {
+            throw new ValidationException("only admin can deactivate wallet");
+        }
+        MemberPO memberPO = memberRepository.findByAccount(transactionInfo.getTargetAccount());
+        if (memberPO == null) {
+            throw new ValidationException("account not found");
+        }
+        if (!memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
+            throw new ValidationException("account not active");
+        }
+        WalletPO walletPO = walletRepository.findById(memberPO.getWalletId())
+                .orElseThrow(() -> new ValidationException("wallet not found"));
+        walletPO.setStatus(WalletStatus.INACTIVE.name());
+
+        try {
+            walletRepository.save(walletPO);
+            return true;
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }

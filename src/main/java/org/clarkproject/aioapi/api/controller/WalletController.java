@@ -2,6 +2,8 @@ package org.clarkproject.aioapi.api.controller;
 
 import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
 import org.clarkproject.aioapi.api.obj.TransactionInfo;
+import org.clarkproject.aioapi.api.orm.MemberPO;
+import org.clarkproject.aioapi.api.orm.WalletTransactionPO;
 import org.clarkproject.aioapi.api.service.WalletService;
 import org.clarkproject.aioapi.api.tool.ValidationException;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/1.0")
@@ -107,27 +110,136 @@ public class WalletController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity withdraw(Long id) {
-        return ResponseEntity.ok().build();
+    public ResponseEntity withdraw(@RequestBody TransactionInfo transactionInfo) {
+        try {
+            TransactionInfo.depositCheck(transactionInfo);
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+
+        try {
+            boolean isSuccess = walletService.withdraw(transactionInfo);
+            if (isSuccess) {
+                HashMap<String, String> result = new HashMap<>();
+                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+                result.put("message", "Wallet withdraw successfully");
+                return ResponseEntity
+                        .ok()
+                        .body(result);
+            } else {
+                HashMap<String, String> error = new HashMap<>();
+                error.put("status", ResponseStatusMessage.ERROR.getValue());
+                error.put("message", "Wallet withdraw Fail!");
+                return ResponseEntity
+                        .badRequest()
+                        .body(error);
+            }
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
+    //TODO 收款方是否也要加入交易紀錄
     @PostMapping("/transfer")
-    public ResponseEntity transfer(Long id) {
-        return ResponseEntity.ok().build();
+    public ResponseEntity transfer(@RequestBody TransactionInfo transactionInfo) {
+        try {
+            TransactionInfo.transferCheck(transactionInfo);
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+
+        try {
+            boolean isSuccess = walletService.transfer(transactionInfo);
+            if (isSuccess) {
+                HashMap<String, String> result = new HashMap<>();
+                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+                result.put("message", "Wallet transfer successfully");
+                return ResponseEntity
+                        .ok()
+                        .body(result);
+            } else {
+                HashMap<String, String> error = new HashMap<>();
+                error.put("status", ResponseStatusMessage.ERROR.getValue());
+                error.put("message", "Wallet transfer Fail!");
+                return ResponseEntity
+                        .badRequest()
+                        .body(error);
+            }
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
+    //TODO 建立DTO不直接回傳PO
     @GetMapping("/wallet_record")
-    public ResponseEntity getWalletRecord(Long id) {
-        return ResponseEntity.ok().build();
+    public ResponseEntity getWalletRecord(@RequestBody TransactionInfo transactionInfo) {
+        if (transactionInfo.getAccount() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
+        }
+        try {
+            List<WalletTransactionPO> transactionPOList = walletService.getWalletRecord(transactionInfo);
+            HashMap<String, Object> result = new HashMap<>();
+            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+            result.put("message", "Wallet record successfully");
+            result.put("info", transactionPOList);
+            return ResponseEntity.ok().body(result);
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
     @PatchMapping("/wallet")
-    public ResponseEntity freeze(Long id) {
-        return ResponseEntity.ok().build();
+    public ResponseEntity freeze(@RequestBody TransactionInfo transactionInfo) {
+        if (transactionInfo.getAccount() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
+        }
+
+        try {
+            boolean isSuccess = walletService.freeze(transactionInfo);
+            if (isSuccess) {
+                HashMap<String, String> result = new HashMap<>();
+                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+                result.put("message", "Wallet freeze successfully");
+                return ResponseEntity.ok().body(result);
+            } else {
+                HashMap<String, String> error = new HashMap<>();
+                error.put("status", ResponseStatusMessage.ERROR.getValue());
+                error.put("message", "Wallet freeze Fail!");
+                return ResponseEntity.badRequest().body(error);
+            }
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
     @DeleteMapping("/wallet")
-    public ResponseEntity deactivate(Long id) {
-        return ResponseEntity.ok().build();
+    public ResponseEntity deactivate(@RequestBody TransactionInfo transactionInfo) {
+        if (transactionInfo.getAccount() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
+        }
+
+        try {
+            boolean isSuccess = walletService.deactivate(transactionInfo);
+            if (isSuccess) {
+                HashMap<String, String> result = new HashMap<>();
+                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+                result.put("message", "Wallet deactivate successfully");
+                return ResponseEntity.ok().body(result);
+            } else {
+                HashMap<String, String> error = new HashMap<>();
+                error.put("status", ResponseStatusMessage.ERROR.getValue());
+                error.put("message", "Wallet deactivate Fail!");
+                return ResponseEntity.badRequest().body(error);
+            }
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 }
