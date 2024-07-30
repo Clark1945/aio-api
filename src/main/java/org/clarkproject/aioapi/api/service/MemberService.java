@@ -7,7 +7,7 @@ import org.clarkproject.aioapi.api.orm.MemberPO;
 import org.clarkproject.aioapi.api.obj.MemberRole;
 import org.clarkproject.aioapi.api.obj.MemberStatus;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
-import org.clarkproject.aioapi.api.tool.ValidationException;
+import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;

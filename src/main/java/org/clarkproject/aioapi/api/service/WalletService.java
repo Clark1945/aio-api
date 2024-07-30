@@ -7,7 +7,7 @@ import org.clarkproject.aioapi.api.orm.WalletTransactionPO;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.repository.WalletRepository;
 import org.clarkproject.aioapi.api.repository.WalletTransactionRepository;
-import org.clarkproject.aioapi.api.tool.ValidationException;
+import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service("WalletService")

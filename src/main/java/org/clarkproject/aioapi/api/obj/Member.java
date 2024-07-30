@@ -1,7 +1,7 @@
 package org.clarkproject.aioapi.api.obj;
 
 import lombok.*;
-import org.clarkproject.aioapi.api.tool.ValidationException;
+import org.clarkproject.aioapi.api.exception.ValidationException;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

@@ -1,6 +1,6 @@
 package org.clarkproject.aioapi.api.obj;
 
-import org.clarkproject.aioapi.api.tool.ValidationException;
+import org.clarkproject.aioapi.api.exception.ValidationException;
 
 public class TransactionInfo {
     String account;

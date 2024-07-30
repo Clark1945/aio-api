@@ -2,10 +2,9 @@ package org.clarkproject.aioapi.api.controller;
 
 import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
 import org.clarkproject.aioapi.api.obj.TransactionInfo;
-import org.clarkproject.aioapi.api.orm.MemberPO;
 import org.clarkproject.aioapi.api.orm.WalletTransactionPO;
 import org.clarkproject.aioapi.api.service.WalletService;
-import org.clarkproject.aioapi.api.tool.ValidationException;
+import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
