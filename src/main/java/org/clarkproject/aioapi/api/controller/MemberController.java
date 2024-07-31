@@ -1,6 +1,7 @@
 package org.clarkproject.aioapi.api.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.clarkproject.aioapi.api.obj.Member;
 import org.clarkproject.aioapi.api.orm.MemberPO;
 import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
@@ -19,7 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/1.0")
-public class MemberController {
+public class MemberController implements IMemberController {
 
     private static final Logger log = LoggerFactory.getLogger(MemberController.class);
     private final MemberService memberService;
@@ -28,8 +29,8 @@ public class MemberController {
         this.memberService = memberService;
     }
 
-    @PostMapping("/member")
-    public ResponseEntity register(@RequestBody Member member, HttpServletRequest request) throws ValidationException {
+    @PostMapping(value = "/member",consumes = {"application/json"})
+    public ResponseEntity register(@Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException {
         String accessIp = request.getRemoteAddr();
         Member.registerValidate(member);
 

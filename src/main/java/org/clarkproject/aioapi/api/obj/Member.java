@@ -2,9 +2,6 @@ package org.clarkproject.aioapi.api.obj;
 
 import lombok.*;
 import org.clarkproject.aioapi.api.exception.ValidationException;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.LocalDate;
 
 @Data
@@ -21,20 +18,10 @@ public class Member {
     private String address;
     private LocalDate birthday;
 
-    private InetAddress ip;
+    private String ip;
     private MemberStatus status;
     private MemberRole role;
 
-    public void setIp(String ip) {
-        try {
-            this.ip = InetAddress.getByName(ip);
-            // 将 InetAddress 转换为字符串并存储到数据库
-            // 存储 ip 到数据库
-        } catch (UnknownHostException e) {
-            // 处理未知主机异常
-            e.printStackTrace();
-        }
-    }
 
     /**
      * 會員註冊 驗證
