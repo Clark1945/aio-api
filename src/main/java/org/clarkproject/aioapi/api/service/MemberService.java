@@ -1,5 +1,6 @@
 package org.clarkproject.aioapi.api.service;
 
+
 import lombok.extern.slf4j.Slf4j;
 import org.clarkproject.aioapi.api.obj.Member;
 import org.clarkproject.aioapi.api.obj.MemberConfig;
@@ -8,13 +9,16 @@ import org.clarkproject.aioapi.api.obj.MemberRole;
 import org.clarkproject.aioapi.api.obj.MemberStatus;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.exception.ValidationException;
+import org.clarkproject.aioapi.api.tool.MemberMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("MemberService")
@@ -183,5 +187,12 @@ public class MemberService {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public List<Member> findAllActiveMember() {
+        return memberRepository.findAllByStatus(MemberStatus.ACTIVE.name())
+                .stream()
+                .map(MemberMapper.INSTANCE::memberPOToMember)
+                .collect(Collectors.toList());
     }
 }

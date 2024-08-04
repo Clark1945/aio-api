@@ -1,244 +1,114 @@
 package org.clarkproject.aioapi.api.controller;
 
-import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.clarkproject.aioapi.api.obj.TransactionInfo;
-import org.clarkproject.aioapi.api.orm.WalletTransactionPO;
-import org.clarkproject.aioapi.api.service.WalletService;
-import org.clarkproject.aioapi.api.exception.ValidationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 
-@RestController
-@RequestMapping("/api/1.0")
-public class WalletController {
-
-    private WalletService walletService;
-
-    public WalletController(WalletService walletService) {
-        this.walletService = walletService;
-    }
-
+/**
+ * Swagger API 文件 因為不想要把文件直接寫在Controller，所以提取出來了
+ */
+@Tag(name = "Wallet", description = "The Wallet API")
+public interface WalletController {
+    @Operation(summary = "Open Wallet",
+            description = "Open a new wallet for the given account.",
+            tags = {"Wallet"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Wallet opened successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = "application/json"))
+    })
     @PostMapping("/wallet")
-    public ResponseEntity openWallet(@RequestBody HashMap<String, String> reqMap) {
-        String account = reqMap.get("account");
-        if (account == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
-        }
+    ResponseEntity openWallet(@RequestBody HashMap<String, String> reqMap);
 
-        try {
-            boolean isOpen = walletService.openWallet(account);
-            if (isOpen) {
-                HashMap<String, String> result = new HashMap<>();
-                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-                result.put("message", "Wallet open successfully");
-                return ResponseEntity
-                        .ok()
-                        .body(result);
-            } else {
-                HashMap<String, String> error = new HashMap<>();
-                error.put("status", ResponseStatusMessage.ERROR.getValue());
-                error.put("message", "Wallt open Fail!");
-                return ResponseEntity
-                        .badRequest()
-                        .body(error);
-            }
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-    }
-
+    @Operation(summary = "Check Wallet Balance",
+            description = "Check the balance of the given wallet account.",
+            tags = {"Wallet"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Wallet balance retrieved successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = "application/json"))
+    })
     @GetMapping("/wallet")
-    public ResponseEntity checkWalletBalance(@RequestBody HashMap<String, String> reqMap) {
-        String account = reqMap.get("account");
-        if (account == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
-        }
-        try {
-            BigDecimal amt = walletService.queryAccount(account).getAmt().setScale(0);
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message", "Wallet query successfully");
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("balance", amt);
-            result.put("info", map);
-            return ResponseEntity.ok().body(result);
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-    }
+    ResponseEntity checkWalletBalance(@RequestBody HashMap<String, String> reqMap);
 
+    @Operation(summary = "Deposit to Wallet",
+            description = "Deposit a specified amount to the given wallet account.",
+            tags = {"Wallet"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Deposit successful",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = "application/json"))
+    })
     @PostMapping("/deposit")
-    public ResponseEntity deposit(@RequestBody TransactionInfo transactionInfo) {
-        try {
-            TransactionInfo.depositCheck(transactionInfo);
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
+    ResponseEntity deposit(@RequestBody TransactionInfo transactionInfo);
 
-        try {
-            boolean isSuccess = walletService.deposit(transactionInfo);
-            if (isSuccess) {
-                HashMap<String, String> result = new HashMap<>();
-                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-                result.put("message", "Wallet Deposit successfully");
-                return ResponseEntity
-                        .ok()
-                        .body(result);
-            } else {
-                HashMap<String, String> error = new HashMap<>();
-                error.put("status", ResponseStatusMessage.ERROR.getValue());
-                error.put("message", "Wallet Deposit Fail!");
-                return ResponseEntity
-                        .badRequest()
-                        .body(error);
-            }
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-
-    }
-
+    @Operation(summary = "Withdraw from Wallet",
+            description = "Withdraw a specified amount from the given wallet account.",
+            tags = {"Wallet"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Withdrawal successful",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = "application/json"))
+    })
     @PostMapping("/withdraw")
-    public ResponseEntity withdraw(@RequestBody TransactionInfo transactionInfo) {
-        try {
-            TransactionInfo.depositCheck(transactionInfo);
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
+    ResponseEntity withdraw(@RequestBody TransactionInfo transactionInfo);
 
-        try {
-            boolean isSuccess = walletService.withdraw(transactionInfo);
-            if (isSuccess) {
-                HashMap<String, String> result = new HashMap<>();
-                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-                result.put("message", "Wallet withdraw successfully");
-                return ResponseEntity
-                        .ok()
-                        .body(result);
-            } else {
-                HashMap<String, String> error = new HashMap<>();
-                error.put("status", ResponseStatusMessage.ERROR.getValue());
-                error.put("message", "Wallet withdraw Fail!");
-                return ResponseEntity
-                        .badRequest()
-                        .body(error);
-            }
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-    }
-
-    //TODO 收款方是否也要加入交易紀錄
+    @Operation(summary = "Transfer between Wallets",
+            description = "Transfer a specified amount from one wallet account to another.",
+            tags = {"Wallet"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transfer successful",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = "application/json"))
+    })
     @PostMapping("/transfer")
-    public ResponseEntity transfer(@RequestBody TransactionInfo transactionInfo) {
-        try {
-            TransactionInfo.transferCheck(transactionInfo);
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
+    ResponseEntity transfer(@RequestBody TransactionInfo transactionInfo);
 
-        try {
-            boolean isSuccess = walletService.transfer(transactionInfo);
-            if (isSuccess) {
-                HashMap<String, String> result = new HashMap<>();
-                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-                result.put("message", "Wallet transfer successfully");
-                return ResponseEntity
-                        .ok()
-                        .body(result);
-            } else {
-                HashMap<String, String> error = new HashMap<>();
-                error.put("status", ResponseStatusMessage.ERROR.getValue());
-                error.put("message", "Wallet transfer Fail!");
-                return ResponseEntity
-                        .badRequest()
-                        .body(error);
-            }
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-    }
-
-    //TODO 建立DTO不直接回傳PO
+    @Operation(summary = "Get Wallet Transactions",
+            description = "Retrieve the transaction history for the given wallet account.",
+            tags = {"Wallet"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transaction history retrieved successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = "application/json"))
+    })
     @GetMapping("/wallet_record")
-    public ResponseEntity getWalletRecord(@RequestBody TransactionInfo transactionInfo) {
-        if (transactionInfo.getAccount() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
-        }
-        try {
-            List<WalletTransactionPO> transactionPOList = walletService.getWalletRecord(transactionInfo);
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message", "Wallet record successfully");
-            result.put("info", transactionPOList);
-            return ResponseEntity.ok().body(result);
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-    }
+    ResponseEntity getWalletRecord(@RequestBody TransactionInfo transactionInfo);
 
+    @Operation(summary = "Freeze Wallet",
+            description = "Freeze the given wallet account.",
+            tags = {"Wallet"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Wallet frozen successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = "application/json"))
+    })
     @PatchMapping("/wallet")
-    public ResponseEntity freeze(@RequestBody TransactionInfo transactionInfo) {
-        if (transactionInfo.getAccount() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
-        }
+    ResponseEntity freeze(@RequestBody TransactionInfo transactionInfo);
 
-        try {
-            boolean isSuccess = walletService.freeze(transactionInfo);
-            if (isSuccess) {
-                HashMap<String, String> result = new HashMap<>();
-                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-                result.put("message", "Wallet freeze successfully");
-                return ResponseEntity.ok().body(result);
-            } else {
-                HashMap<String, String> error = new HashMap<>();
-                error.put("status", ResponseStatusMessage.ERROR.getValue());
-                error.put("message", "Wallet freeze Fail!");
-                return ResponseEntity.badRequest().body(error);
-            }
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-    }
-
+    @Operation(summary = "Deactivate Wallet",
+            description = "Deactivate the given wallet account.",
+            tags = {"Wallet"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Wallet deactivated successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters",
+                    content = @Content(mediaType = "application/json"))
+    })
     @DeleteMapping("/wallet")
-    public ResponseEntity deactivate(@RequestBody TransactionInfo transactionInfo) {
-        if (transactionInfo.getAccount() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
-        }
-
-        try {
-            boolean isSuccess = walletService.deactivate(transactionInfo);
-            if (isSuccess) {
-                HashMap<String, String> result = new HashMap<>();
-                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-                result.put("message", "Wallet deactivate successfully");
-                return ResponseEntity.ok().body(result);
-            } else {
-                HashMap<String, String> error = new HashMap<>();
-                error.put("status", ResponseStatusMessage.ERROR.getValue());
-                error.put("message", "Wallet deactivate Fail!");
-                return ResponseEntity.badRequest().body(error);
-            }
-        } catch (ValidationException e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-    }
+    ResponseEntity deactivate(@RequestBody TransactionInfo transactionInfo);
 }

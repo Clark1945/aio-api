@@ -10,6 +10,9 @@ import org.mapstruct.factory.Mappers;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+/**
+ * 物件轉型用，可以理解物件之間有一個代理處理兩者間不同的地方後再轉型
+ */
 @Mapper
 public interface MemberMapper {
     MemberMapper INSTANCE = Mappers.getMapper(MemberMapper.class);

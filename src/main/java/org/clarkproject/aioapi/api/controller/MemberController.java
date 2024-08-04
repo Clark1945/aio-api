@@ -1,176 +1,83 @@
 package org.clarkproject.aioapi.api.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.clarkproject.aioapi.api.obj.Member;
-import org.clarkproject.aioapi.api.orm.MemberPO;
-import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
-import org.clarkproject.aioapi.api.service.MemberService;
-import org.clarkproject.aioapi.api.tool.MemberMapper;
+import jakarta.validation.constraints.NotNull;
 import org.clarkproject.aioapi.api.exception.ValidationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
+import org.clarkproject.aioapi.api.obj.Member;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.HashMap;
-import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/1.0")
-public class MemberController implements IMemberController {
+/**
+ * Swagger API 文件 因為不想要把文件直接寫在Controller，所以提取出來了
+ */
+@Tag(name = "Member", description = "The member API Demo")
+public interface MemberController {
 
-    private static final Logger log = LoggerFactory.getLogger(MemberController.class);
-    private final MemberService memberService;
+    @Operation(summary = "Register member",
+            description = "Please use unique account name to register your account.",
+            tags = {"Member"})
+    @ApiResponses(value = { @ApiResponse(description = "successful operation",
+                                        content = {@Content(mediaType = "application/json",
+                                                            schema = @Schema(implementation = Member.class))})
+    })
+    public ResponseEntity register(@Parameter(description = "Register member") @Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException;
 
-    public MemberController(MemberService memberService) {
-        this.memberService = memberService;
-    }
+    @Operation(summary = "Login member",
+            description = "Use account and password to login.",
+            tags = {"Member"})
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "successful operation",
+            content = {@Content(mediaType = "application/json",
+                                schema = @Schema(implementation = Member.class))})
+    })
+    public ResponseEntity login(@Parameter(description = "Login member") @Valid @RequestBody Member member,HttpServletRequest request) throws ValidationException;
 
-    @PostMapping(value = "/member",consumes = {"application/json"})
-    public ResponseEntity register(@Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException {
-        String accessIp = request.getRemoteAddr();
-        Member.registerValidate(member);
+    @Operation(summary = "Get member info",
+            description = "Get member info with given id",
+            tags = {"Member"})
+    @ApiResponses(value ={
+            @ApiResponse(responseCode = "200", description = "Successful operation", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = Member.class)),}),
+            @ApiResponse(description = "successful operation")
+    })
+    public ResponseEntity getMember(@RequestParam("id") Long id);
 
-        boolean isMemberExisted = memberService.findActiveAccount(member.getAccount()).isPresent();
-        if (isMemberExisted) {
-            HashMap<String, String> errors = new HashMap<>();
-            errors.put("status", ResponseStatusMessage.ERROR.getValue());
-            errors.put("message", "Member already exists");
-            return ResponseEntity
-                    .badRequest()
-                    .body(errors);
-        }
+    @Operation(summary = "Update member", description = "Update with Member",tags = {"Member"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Member updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid account name"),
+            @ApiResponse(responseCode = "404", description = "Not found")
+    })
+    public ResponseEntity updateMember(@RequestBody Member member, HttpServletRequest request) throws ValidationException;
 
-        member.setIp(accessIp);
-        MemberPO memberPO = MemberMapper.INSTANCE.memberToMemberPo(member);
-        try {
-            memberService.saveMember(memberPO);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-        HashMap<String, String> result = new HashMap<>();
-        result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-        result.put("message", "Member add successfully");
-        return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
-                .body(result);
-    }
+    @Operation(summary = "Disable member by id", tags = { "Member" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "successful operation", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = Member.class)),
+                    @Content(mediaType = "application/xml", schema = @Schema(implementation = Member.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid id supplied", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content) })
+    public ResponseEntity disableMember(@Parameter(description = "The id that needs to be disable.", required = true) @RequestParam Long id, HttpServletRequest request) throws ValidationException;
 
-    @PostMapping("/login")
-    public ResponseEntity login(@RequestBody Member member, HttpServletRequest request) throws ValidationException {
-        String accessIp = request.getRemoteAddr();
-        Member.loginValidate(member);
-        boolean isPass = memberService.login(member, accessIp);
-
-        if (isPass) {
-            HashMap<String, String> result = new HashMap<>();
-            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message", "Member add successfully");
-            return ResponseEntity
-                    .ok()
-                    .body(result);
-        } else {
-            HashMap<String, String> error = new HashMap<>();
-            error.put("status", ResponseStatusMessage.ERROR.getValue());
-            error.put("message", "Login Fail!");
-            return ResponseEntity
-                    .badRequest()
-                    .body(error);
-        }
-    }
-
-    @GetMapping("/member")
-    public ResponseEntity getMember(@RequestParam("id") Long id) {
-        Optional<MemberPO> memberPO = memberService.findAccountById(id);
-        if (memberPO.isPresent()) {
-            Member member = MemberMapper.INSTANCE.memberPOToMember(memberPO.get());
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message", "Member get successfully");
-            result.put("info", member);
-            return ResponseEntity.ok().body(result);
-        } else {
-            HashMap<String, Object> error = new HashMap<>();
-            error.put("status", ResponseStatusMessage.ERROR.getValue());
-            error.put("message", "Member not found");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-        }
-    }
-
-    @PutMapping("/member")
-    public ResponseEntity updateMember(@RequestBody Member member, HttpServletRequest request) throws ValidationException {
-        String accessIp = request.getRemoteAddr();
-        Member.updateValidate(member);
-        boolean isUpdated = memberService.update(member, accessIp);
-        if (isUpdated) {
-            HashMap<String, String> result = new HashMap<>();
-            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message", "Member update successfully");
-            return ResponseEntity
-                    .ok()
-                    .body(result);
-        } else {
-            HashMap<String, String> error = new HashMap<>();
-            error.put("status", ResponseStatusMessage.ERROR.getValue());
-            error.put("message", "Member update fail!");
-            return ResponseEntity
-                    .badRequest()
-                    .body(error);
-        }
-    }
-
-    @PatchMapping("/member")
-    public ResponseEntity disableMember(@RequestParam Long id, HttpServletRequest request) throws ValidationException {
-        String accessIp = request.getRemoteAddr();
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "id is null");
-        }
-        boolean isDisableSuccess = memberService.disableMember(id, accessIp);
-        if (isDisableSuccess) {
-            HashMap<String,String> result = new HashMap<>();
-            result.put("status",ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message","Member delete successfully");
-            return ResponseEntity
-                    .ok()
-                    .body(result);
-        } else {
-            HashMap<String, String> error = new HashMap<>();
-            error.put("status",ResponseStatusMessage.ERROR.getValue());
-            error.put("message","Member delete fail!");
-            return ResponseEntity
-                    .badRequest()
-                    .body(error);
-        }
-    }
-
-    @DeleteMapping("/member")
-    public ResponseEntity frozeMember(@RequestBody HashMap<String, Long> reqMap,
-                                      HttpServletRequest request) throws ValidationException {
-        String accessIp = request.getRemoteAddr();
-        Long id = reqMap.get("id");
-        Long adminId = reqMap.get("adminId");
-        if (id == null || adminId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "id is null");
-        }
-        boolean isDisableSuccess = memberService.frozeMember(id, accessIp, adminId);
-        if (isDisableSuccess) {
-            HashMap<String,String> result = new HashMap<>();
-            result.put("status",ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message","Member delete successfully");
-            return ResponseEntity
-                    .ok()
-                    .body(result);
-        } else {
-            HashMap<String, String> error = new HashMap<>();
-            error.put("status",ResponseStatusMessage.ERROR.getValue());
-            error.put("message","Member delete fail!");
-            return ResponseEntity
-                    .badRequest()
-                    .body(error);
-        }
-    }
+    @Operation(summary = "Froze number by ID", tags = { "Member" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", headers = {
+                    @Header(name = "X-Rate-Limit", description = "calls per hour allowed by the user", schema = @Schema(type = "integer", format = "int32")),
+                    @Header(name = "X-Expires-After", description = "date in UTC when toekn expires", schema = @Schema(type = "string", format = "date-time")) },
+                    description = "successful operation", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid username/password supplied", content = @Content) })
+    @GetMapping(value = "/user/login", produces = { "application/xml", "application/json" })
+    public ResponseEntity frozeMember(@NotNull @Parameter(description = "Request Map") @Valid @RequestBody HashMap<String,Long> reqMap, HttpServletRequest request) throws ValidationException;
 }
