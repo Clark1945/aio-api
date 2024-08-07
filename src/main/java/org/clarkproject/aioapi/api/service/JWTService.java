@@ -1,6 +1,8 @@
 package org.clarkproject.aioapi.api.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,11 +15,12 @@ import java.util.Date;
 public class JWTService {
     private final SecretKey secretKey;
     private final int validSeconds;
-
+    private final JwtParser jwtParser;
     public JWTService(
             String secretKeyStr, int validSeconds) {
         this.secretKey = Keys.hmacShaKeyFor(secretKeyStr.getBytes());
         this.validSeconds = validSeconds;
+        this.jwtParser = Jwts.parser().verifyWith(secretKey).build();
     }
 
     public String createLoginAccessToken(UserDetails user) {
@@ -40,5 +43,9 @@ public class JWTService {
                 .claims(claims)
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public Claims parseToken(String jwt) throws JwtException {
+        return jwtParser.parseSignedClaims(jwt).getPayload();
     }
 }

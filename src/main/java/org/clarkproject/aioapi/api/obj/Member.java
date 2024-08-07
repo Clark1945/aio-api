@@ -2,13 +2,21 @@ package org.clarkproject.aioapi.api.obj;
 
 import lombok.*;
 import org.clarkproject.aioapi.api.exception.ValidationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Member {
+public class Member implements UserDetails {
 
     private String name;
     private String account;
@@ -79,5 +87,15 @@ public class Member {
 
     public static void deleteValidation(Member member) {
 
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority(this.getRole().name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return this.getName();
     }
 }

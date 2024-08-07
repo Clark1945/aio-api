@@ -12,8 +12,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -39,23 +41,25 @@ import java.util.stream.Collectors;
 public class SecurityConfig {
 
     private final MemberService memberService;
+
     public SecurityConfig(MemberService memberService) {
         this.memberService = memberService;
     }
 
     /**
      * 設定 可登入User與權限設定
+     *
      * @return
      */
     @Bean
     InMemoryUserDetailsManager inMemoryUserDetailsManager() {
         List<Member> memberList = memberService.findAllActiveMember();
         List<UserDetails> registeredUserList = memberList.stream()
-                .map( member -> User
-                    .withUsername(member.getAccount())
-                    .password("{noop}" + member.getPassword()) // noop 代表不加密 另外可使用 BCrypt、SHA256等
-                    .authorities(member.getStatus().name())
-                    .build())
+                .map(member -> User
+                        .withUsername(member.getAccount())
+                        .password(member.getPassword()) // noop 代表不加密 另外可使用 BCrypt、SHA256等
+                        .authorities(member.getStatus().name())
+                        .build())
                 .collect(Collectors.toList());
 
         return new InMemoryUserDetailsManager(registeredUserList); // 設定可以登入的User
@@ -63,6 +67,7 @@ public class SecurityConfig {
 
     /**
      * 可以為各個API設定訪問權限與CSRF
+     *
      * @param httpSecurity
      * @return
      * @throws Exception
@@ -72,28 +77,30 @@ public class SecurityConfig {
         return httpSecurity
                 .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers(HttpMethod.GET, "/api/1.0/member").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/1.0/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/1.0/wallet_record").hasAnyAuthority("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/1.0/wallet").hasAnyAuthority("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/1.0/member").hasAnyAuthority("USER","ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/1.0/member").hasAnyAuthority("USER","ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/1.0/wallet").hasAnyAuthority("USER","ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/1.0/withdraw").hasAnyAuthority("USER","ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/1.0/transfer").hasAnyAuthority("USER","ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/1.0/deposit").hasAnyAuthority("USER","ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/1.0/member").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/1.0/member").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/1.0/wallet").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/1.0/wallet").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/1.0/member").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/1.0/login").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/1.0/who-am-i").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/1.0/wallet_record").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/1.0/wallet").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/1.0/member").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/1.0/member").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/1.0/wallet").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/1.0/withdraw").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/1.0/transfer").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/1.0/deposit").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/1.0/member").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/api/1.0/member").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/1.0/wallet").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/api/1.0/wallet").hasAuthority("ADMIN")
 //                        .access(new WebExpressionAuthorizationManager("hasAuthority('ADMIN') AND hasAuthority('TEACHER')")) and 查詢
-                        .anyRequest().authenticated()
+                                .anyRequest().authenticated()
                 ).csrf(AbstractHttpConfigurer::disable)
                 .build();
     }
 
     /**
      * 密碼加密工具
+     *
      * @return
      */
     @Bean
@@ -108,9 +115,18 @@ public class SecurityConfig {
     ) {
         return new JWTService(secretKeyStr, validSeconds);
     }
+
     @Bean
     @ConditionalOnMissingBean(AuthenticationEventPublisher.class)
     DefaultAuthenticationEventPublisher defaultAuthenticationEventPublisher(ApplicationEventPublisher delegate) {
         return new DefaultAuthenticationEventPublisher(delegate);
+    }
+
+    /**
+     * Spring Security認證元件
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity.getSharedObject(AuthenticationManagerBuilder.class).build();
     }
 }

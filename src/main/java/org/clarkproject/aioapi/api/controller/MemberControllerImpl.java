@@ -1,21 +1,32 @@
 package org.clarkproject.aioapi.api.controller;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.clarkproject.aioapi.api.obj.Member;
 import org.clarkproject.aioapi.api.orm.MemberPO;
 import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
+import org.clarkproject.aioapi.api.service.JWTService;
 import org.clarkproject.aioapi.api.service.MemberService;
 import org.clarkproject.aioapi.api.tool.MemberMapper;
 import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -24,12 +35,24 @@ public class MemberControllerImpl implements MemberController {
 
     private static final Logger log = LoggerFactory.getLogger(MemberControllerImpl.class);
     private final MemberService memberService;
+    private final JWTService jwtService;
+    private final UserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
-    public MemberControllerImpl(MemberService memberService) {
+    public MemberControllerImpl(MemberService memberService,
+                                JWTService jwtService,
+                                UserDetailsService userDetailsService,
+                                PasswordEncoder passwordEncoder,
+                                AuthenticationManager authenticationManager) {
         this.memberService = memberService;
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
     }
 
-    @PostMapping(value = "/member",consumes = {"application/json"})
+    @PostMapping(value = "/member", consumes = {"application/json"})
     public ResponseEntity register(@Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException {
         String accessIp = request.getRemoteAddr();
         Member.registerValidate(member);
@@ -64,12 +87,25 @@ public class MemberControllerImpl implements MemberController {
     public ResponseEntity login(@RequestBody Member member, HttpServletRequest request) throws ValidationException {
         String accessIp = request.getRemoteAddr();
         Member.loginValidate(member);
+//        UserDetails user = userDetailsService.loadUserByUsername(member.getAccount());
+//        if (!passwordEncoder.matches(member.getPassword(), user.getPassword())) {
+//            throw new BadCredentialsException("Authentication fails because of incorrect password.");
+//        }
+
+        Authentication token = new UsernamePasswordAuthenticationToken(
+                member.getAccount(),
+                member.getPassword()
+        );
+        Authentication auth = authenticationManager.authenticate(token);
+        UserDetails user = (UserDetails) auth.getPrincipal();
+
         boolean isPass = memberService.login(member, accessIp);
 
         if (isPass) {
             HashMap<String, String> result = new HashMap<>();
             result.put("status", ResponseStatusMessage.SUCCESS.getValue());
             result.put("message", "Member add successfully");
+            result.put("token", jwtService.createLoginAccessToken(user));
             return ResponseEntity
                     .ok()
                     .body(result);
@@ -131,16 +167,16 @@ public class MemberControllerImpl implements MemberController {
         }
         boolean isDisableSuccess = memberService.disableMember(id, accessIp);
         if (isDisableSuccess) {
-            HashMap<String,String> result = new HashMap<>();
-            result.put("status",ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message","Member delete successfully");
+            HashMap<String, String> result = new HashMap<>();
+            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+            result.put("message", "Member delete successfully");
             return ResponseEntity
                     .ok()
                     .body(result);
         } else {
             HashMap<String, String> error = new HashMap<>();
-            error.put("status",ResponseStatusMessage.ERROR.getValue());
-            error.put("message","Member delete fail!");
+            error.put("status", ResponseStatusMessage.ERROR.getValue());
+            error.put("message", "Member delete fail!");
             return ResponseEntity
                     .badRequest()
                     .body(error);
@@ -158,19 +194,31 @@ public class MemberControllerImpl implements MemberController {
         }
         boolean isDisableSuccess = memberService.frozeMember(id, accessIp, adminId);
         if (isDisableSuccess) {
-            HashMap<String,String> result = new HashMap<>();
-            result.put("status",ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message","Member delete successfully");
+            HashMap<String, String> result = new HashMap<>();
+            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
+            result.put("message", "Member delete successfully");
             return ResponseEntity
                     .ok()
                     .body(result);
         } else {
             HashMap<String, String> error = new HashMap<>();
-            error.put("status",ResponseStatusMessage.ERROR.getValue());
-            error.put("message","Member delete fail!");
+            error.put("status", ResponseStatusMessage.ERROR.getValue());
+            error.put("message", "Member delete fail!");
             return ResponseEntity
                     .badRequest()
                     .body(error);
+        }
+    }
+
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    @GetMapping("/who-am-i")
+    public Map<String, Object> whoAmI(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
+        String jwt = authorization.substring(BEARER_PREFIX.length());
+        try {
+            return jwtService.parseToken(jwt);
+        } catch (JwtException e) {
+            throw new BadCredentialsException(e.getMessage(), e);
         }
     }
 }
