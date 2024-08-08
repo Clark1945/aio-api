@@ -1,7 +1,12 @@
 package org.clarkproject.aioapi.api.obj;
 
+import lombok.Data;
 import org.clarkproject.aioapi.api.exception.ValidationException;
 
+/**
+ * 交易DTO
+ */
+@Data
 public class TransactionInfo {
     String account;
     int amount;

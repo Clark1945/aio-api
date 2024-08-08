@@ -2,6 +2,9 @@ package org.clarkproject.aioapi.api.obj;
 
 import lombok.Getter;
 
+/**
+ * API狀態回應
+ */
 @Getter
 public enum ResponseStatusMessage {
     SUCCESS("success"),
@@ -9,8 +12,5 @@ public enum ResponseStatusMessage {
     private final String value;
     ResponseStatusMessage(String value) {
         this.value = value;
-    }
-    public String getValue() {
-        return value;
     }
 }

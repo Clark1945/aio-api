@@ -4,7 +4,6 @@ import org.clarkproject.aioapi.api.obj.*;
 import org.clarkproject.aioapi.api.orm.MemberPO;
 import org.clarkproject.aioapi.api.orm.WalletPO;
 import org.clarkproject.aioapi.api.orm.WalletTransactionPO;
-import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.repository.WalletRepository;
 import org.clarkproject.aioapi.api.repository.WalletTransactionRepository;
 import org.clarkproject.aioapi.api.exception.ValidationException;
@@ -15,32 +14,28 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service("WalletService")
 public class WalletService {
 
-    private MemberRepository memberRepository;
-    private WalletRepository walletRepository;
-    private WalletTransactionRepository transactionRepository;
+    private final MemberService memberService;
+    private final WalletRepository walletRepository;
+    private final WalletTransactionRepository transactionRepository;
 
-    public WalletService(MemberRepository memberRepository,
+    public WalletService(MemberService memberService,
                          WalletRepository walletRepository,
                          WalletTransactionRepository transactionRepository) {
-        this.memberRepository = memberRepository;
+        this.memberService = memberService;
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public boolean openWallet(String account) throws ValidationException {
-        MemberPO memberPO = memberRepository.findByAccount(account);
-        if (memberPO == null) {
-            throw new ValidationException("account not found");
-        }
-        if (!memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
-            throw new ValidationException("account not active");
-        }
+        MemberPO memberPO = memberService.findActiveAccount(account)
+                .orElseThrow(() -> new ValidationException("account not available"));
 
         WalletPO walletPO = new WalletPO();
         walletPO.setAmt(new BigDecimal(0));
@@ -48,30 +43,26 @@ public class WalletService {
         try {
             WalletPO walletPO1 = walletRepository.save(walletPO);
             memberPO.setWalletId((walletPO1.getId()));
-            memberRepository.save(memberPO);
+            memberService.saveMember(memberPO);
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
     public WalletPO queryAccount(String account) throws ValidationException {
-        MemberPO memberPO = memberRepository.findByAccount(account);
-        if (memberPO == null) {
-            throw new ValidationException("account not found");
-        }
-        if (!memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
-            throw new ValidationException("account not active");
-        }
-        WalletPO walletPO = walletRepository.findById(memberPO.getWalletId())
-                .orElseThrow(() -> new ValidationException("wallet not found"));
-        if (!walletPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
-            throw new ValidationException("walletPO not active");
-        }
-        return walletPO;
+        MemberPO memberPO = memberService.findActiveAccount(account)
+                .orElseThrow(() -> new ValidationException("account not available"));
+
+        Optional<WalletPO> walletPO = walletRepository.findById(memberPO.getWalletId());
+        walletPO.orElseThrow(() -> new ValidationException("wallet not available"));
+        walletPO.filter(w -> w.getStatus().equals(WalletStatus.ACTIVE.name()))
+                .orElseThrow(() -> new ValidationException("walletPO not active"));
+        return walletPO.get();
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public boolean deposit(TransactionInfo transactionInfo) throws ValidationException {
         WalletPO walletPO = queryAccount(transactionInfo.getAccount());
 
@@ -91,12 +82,13 @@ public class WalletService {
             transactionRepository.save(walletTransactionPO);
             walletRepository.save(walletPO);
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public boolean withdraw(TransactionInfo transactionInfo) throws ValidationException {
         WalletPO walletPO = queryAccount(transactionInfo.getAccount());
         BigDecimal fee = new BigDecimal(1);
@@ -117,12 +109,13 @@ public class WalletService {
             transactionRepository.save(walletTransactionPO);
             walletRepository.save(walletPO);
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public boolean transfer(TransactionInfo transactionInfo) throws ValidationException {
         WalletPO walletPO = queryAccount(transactionInfo.getAccount());
         BigDecimal fee = new BigDecimal(1);
@@ -145,20 +138,17 @@ public class WalletService {
             transactionRepository.save(walletTransactionPO);
             walletRepository.save(walletPO);
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
+
     public List<WalletTransactionPO> getWalletRecord(TransactionInfo transactionInfo) throws ValidationException {
-        MemberPO memberPO = memberRepository.findByAccount(transactionInfo.getAccount());
-        if (memberPO == null) {
-            throw new ValidationException("account not found");
-        }
-        if (!memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
-            throw new ValidationException("account not active");
-        }
+        MemberPO memberPO = memberService.findActiveAccount(transactionInfo.getAccount())
+                .orElseThrow(() -> new ValidationException("account not available"));
+
         WalletPO walletPO = walletRepository.findById(memberPO.getWalletId())
                 .orElseThrow(() -> new ValidationException("wallet not found"));
         if (!walletPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
@@ -166,17 +156,13 @@ public class WalletService {
         }
 
         return transactionRepository.findAllByWalletId(walletPO.getId())
-                .orElseThrow(()-> new ValidationException("wallet not found"));
+                .orElseThrow(() -> new ValidationException("wallet not found"));
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public boolean freeze(TransactionInfo transactionInfo) throws ValidationException {
-        MemberPO memberPO = memberRepository.findByAccount(transactionInfo.getAccount());
-        if (memberPO == null) {
-            throw new ValidationException("account not found");
-        }
-        if (!memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
-            throw new ValidationException("account not active");
-        }
+        MemberPO memberPO = memberService.findActiveAccount(transactionInfo.getAccount())
+                .orElseThrow(() -> new ValidationException("account not available"));
         WalletPO walletPO = walletRepository.findById(memberPO.getWalletId())
                 .orElseThrow(() -> new ValidationException("wallet not found"));
         walletPO.setStatus(WalletStatus.SUSPENDED.name());
@@ -190,18 +176,11 @@ public class WalletService {
         }
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public boolean deactivate(TransactionInfo transactionInfo) throws ValidationException {
-        boolean isAdmin = memberRepository.findByAccount(transactionInfo.getAccount()).getRole().equals(MemberRole.ADMIN.name());
-        if (!isAdmin) {
-            throw new ValidationException("only admin can deactivate wallet");
-        }
-        MemberPO memberPO = memberRepository.findByAccount(transactionInfo.getTargetAccount());
-        if (memberPO == null) {
-            throw new ValidationException("account not found");
-        }
-        if (!memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
-            throw new ValidationException("account not active");
-        }
+        MemberPO memberPO = memberService.findActiveAccount(transactionInfo.getAccount())
+                .filter(m -> m.getRole().equals(MemberRole.ADMIN.name()))
+                .orElseThrow(() -> new ValidationException("account not available"));
         WalletPO walletPO = walletRepository.findById(memberPO.getWalletId())
                 .orElseThrow(() -> new ValidationException("wallet not found"));
         walletPO.setStatus(WalletStatus.INACTIVE.name());

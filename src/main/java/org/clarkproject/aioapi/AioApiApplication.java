@@ -10,7 +10,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.util.HashMap;
 
 @SpringBootApplication
 public class AioApiApplication {
@@ -19,8 +18,14 @@ public class AioApiApplication {
         SpringApplication.run(AioApiApplication.class, args);
     }
 
+    /**
+     * 文件Header
+     * @param appVersion
+     * @param email
+     * @return
+     */
     @Bean
-    public OpenAPI customOpenAPI(@Value("${springdoc.version}") String appVersion,
+    public OpenAPI OpenAPIHeader(@Value("${springdoc.version}") String appVersion,
                                  @Value("${contact.email}") String email) {
         return new OpenAPI()
                 .components(new Components())
@@ -38,5 +43,4 @@ public class AioApiApplication {
                         .summary("This is a summary")
                 );
     }
-
 }

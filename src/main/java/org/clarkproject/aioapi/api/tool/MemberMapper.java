@@ -26,16 +26,26 @@ public interface MemberMapper {
     @Mapping(source = "ip", target = "ip", qualifiedByName = "inetAddressToString")
     Member memberPOToMember(MemberPO memberPO);
 
+    /**
+     * 轉型後設定預設值
+     * @param memberPO 轉換對象
+     * @param member 轉換來源
+     */
     @AfterMapping
     default void setDefaultValues(@MappingTarget MemberPO memberPO, Member member) {
         if (memberPO.getRole() == null) {
-            memberPO.setRole(MemberRole.USER.name()); // 设置默认值
+            memberPO.setRole(MemberRole.USER.name());
         }
         if (memberPO.getStatus() == null) {
             memberPO.setStatus(MemberStatus.ACTIVE.name());
         }
     }
 
+    /**
+     * 屬性型別轉換
+     * @param ip 請求IP
+     * @return
+     */
     @Named("stringToInetAddress")
     default InetAddress stringToInetAddress(String ip) {
         try {

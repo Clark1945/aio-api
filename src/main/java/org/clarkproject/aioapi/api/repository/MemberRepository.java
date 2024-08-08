@@ -8,6 +8,5 @@ import java.util.List;
 
 public interface MemberRepository extends JpaRepository<MemberPO, Long> {
     MemberPO findByAccount(String account);
-    MemberPO findByAccountAndStatus(String account, String status);
     List<MemberPO> findAllByStatus(String status);
 }
