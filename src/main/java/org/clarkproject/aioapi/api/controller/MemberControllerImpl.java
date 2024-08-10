@@ -178,15 +178,22 @@ public class MemberControllerImpl implements MemberController {
      * @throws ValidationException
      */
     @PostMapping(value = "/getJWTToken",produces = "application/json")
-    public LoginResponse loginWithJWTToken(@RequestBody Member member) throws ValidationException {
-//        Authentication token = new UsernamePasswordAuthenticationToken(
-//                member.getAccount(),
-//                member.getPassword()
-//        );
-//        Authentication auth = authenticationManager.authenticate(token);
-//        UserDetails user = (UserDetails) auth.getPrincipal();
-//
-//        String jwt = jwtService.createLoginAccessToken(user);
+    public LoginResponse loginWithJWTToken(@RequestBody Member member) {
+        Authentication token = new UsernamePasswordAuthenticationToken(
+                member.getAccount(),
+                member.getPassword()
+        );
+        Authentication auth = authenticationManager.authenticate(token);
+        UserDetails user = (UserDetails) auth.getPrincipal();
+
+        String jwt = jwtService.createLoginAccessToken(user);
+        return LoginResponse.of(jwt,user);
+    }
+
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    @PostMapping("/loginWithJWTToken")
+    public ResponseEntity loginWithJWTToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws ValidationException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if ("anonymousUser".equals(principal)) {
             throw new ValidationException("你尚未經過身份認證");
@@ -196,21 +203,14 @@ public class MemberControllerImpl implements MemberController {
         System.out.printf("嗨，你的帳號：%s%n權限：%s%n",
                 userDetails.getUsername(),
                 userDetails.getAuthorities());
-        String jwt = jwtService.createLoginAccessToken(userDetails);
-        return LoginResponse.of(jwt,userDetails);
-    }
 
-    private static final String BEARER_PREFIX = "Bearer ";
-
-    @PostMapping("/loginWithJWTToken")
-    public ResponseEntity loginWithJWTToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
-        Map<String, Object> jwtResult;
-        String jwt = authorization.substring(BEARER_PREFIX.length());
-        try {
-            jwtResult = jwtService.parseToken(jwt);
-        } catch (JwtException e) {
-            throw new BadCredentialsException(e.getMessage(), e);
-        }
+//        Map<String, Object> jwtResult;
+//        String jwt = authorization.substring(BEARER_PREFIX.length());
+//        try {
+//            jwtResult = jwtService.parseToken(jwt);
+//        } catch (JwtException e) {
+//            throw new BadCredentialsException(e.getMessage(), e);
+//        }
 
         HashMap<String, String> result = new HashMap<>();
         result.put("status", ResponseStatusMessage.SUCCESS.getValue());

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 @Getter
 public class MemberUserDetails implements UserDetails {
     private MemberPO memberPO;
+    private String username;
 
     public MemberUserDetails() {
     }
@@ -29,9 +30,8 @@ public class MemberUserDetails implements UserDetails {
     public String getUsername() {
         return memberPO.getAccount();
     }
-
     public void setUsername(String username) {
-        memberPO.setAccount(username);
+        this.username = username;
     }
 
     public String getPassword() {
@@ -57,12 +57,11 @@ public class MemberUserDetails implements UserDetails {
     public boolean isCredentialsNonExpired() {
         return true;
     }
-
-    public void setMemberAuthorities(List<MemberRole> memberAuthorities) {
+    private String role;
+    public void setMemberAuthorities(List<String> memberAuthorities) {
         // 将List<MemberRole> 转换为以逗号分割的字符串
-        String roles = memberAuthorities.stream()
-                .map(MemberRole::name) // 假设 MemberRole 有 getRoleName 方法
-                .collect(Collectors.joining(","));
-        memberPO.setRole(roles);
+        // 假设 MemberRole 有 getRoleName 方法
+        String rolesWithComon = String.join(",", memberAuthorities);
+        this.role = rolesWithComon;
     }
 }

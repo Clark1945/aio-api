@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.clarkproject.aioapi.api.obj.MemberRole;
 import org.clarkproject.aioapi.api.obj.MemberUserDetails;
+import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.service.JWTService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,18 +18,22 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final List<String> EXCLUDED_PATHS = Arrays.asList("/login", "/who-am-i");
+    private static final List<String> EXCLUDED_PATHS = Arrays.asList("/api/1.0/getJWTToken");
     private static final String BEARER_PREFIX = "Bearer ";
     private final JWTService jwtService;
-    public JwtAuthenticationFilter(JWTService jwtService) {
+    private final MemberRepository memberRepository;
+    public JwtAuthenticationFilter(JWTService jwtService, MemberRepository memberRepository) {
         this.jwtService = jwtService;
+        this.memberRepository = memberRepository;
     }
 
     @Override
@@ -50,12 +55,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // 建立 UserDetails 物件
-        MemberUserDetails userDetails = new MemberUserDetails();
+        MemberUserDetails userDetails = new MemberUserDetails(memberRepository.findByAccount(claims.get("username", String.class)));
         userDetails.setUsername(claims.get("username", String.class));
 
-        List<MemberRole> memberAuthorities = ((List<String>) claims.get("authorities"))
+        List<String> memberAuthorities = ((ArrayList<LinkedHashMap<String,String>>) claims.get("authorities"))
                 .stream()
-                .map(MemberRole::valueOf)
+                .map( a -> a.get("authority"))
                 .collect(Collectors.toList());
 
         userDetails.setMemberAuthorities(memberAuthorities);
