@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.clarkproject.aioapi.api.obj.LoginResponse;
 import org.clarkproject.aioapi.api.obj.Member;
+import org.clarkproject.aioapi.api.obj.MemberUserDetails;
 import org.clarkproject.aioapi.api.orm.MemberPO;
 import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
 import org.clarkproject.aioapi.api.service.JWTService;
@@ -21,6 +22,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,19 +41,16 @@ public class MemberControllerImpl implements MemberController {
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
     private final UserIdIdentity userIdentity;
-    private final UserDetailsService userDetailsService;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
     public MemberControllerImpl(MemberService memberService,
                                 PasswordEncoder passwordEncoder,
                                 UserIdIdentity userIdentity,
-                                UserDetailsService userDetailsService,
                                 JWTService jwtService,
                                 AuthenticationManager authenticationManager) {
         this.memberService = memberService;
         this.passwordEncoder = passwordEncoder;
         this.userIdentity = userIdentity;
-        this.userDetailsService = userDetailsService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
     }
@@ -117,18 +116,6 @@ public class MemberControllerImpl implements MemberController {
         if (!isPasswordMeet) {
             throw new ValidationException("Authentication fails because of incorrect password.");
         }
-//        UserDetails user = userDetailsService.loadUserByUsername(member.getAccount());
-//        isPasswordMeet = passwordEncoder.matches(member.getPassword(), user.getPassword());
-//        if (!isPasswordMeet) {
-//            throw new BadCredentialsException("Authentication fails because of incorrect password.");
-//        }
-
-//        Authentication token = new UsernamePasswordAuthenticationToken(
-//                member.getAccount(),
-//                member.getPassword()
-//        );
-//        Authentication auth = authenticationManager.authenticate(token);
-//        UserDetails user = (UserDetails) auth.getPrincipal();
 
         HashMap<String, String> result = new HashMap<>();
         result.put("status", ResponseStatusMessage.SUCCESS.getValue());
@@ -191,16 +178,26 @@ public class MemberControllerImpl implements MemberController {
      * @throws ValidationException
      */
     @PostMapping(value = "/getJWTToken",produces = "application/json")
-    public LoginResponse loginWithJWTToken(@RequestBody Member member) {
-        Authentication token = new UsernamePasswordAuthenticationToken(
-                member.getAccount(),
-                member.getPassword()
-        );
-        Authentication auth = authenticationManager.authenticate(token);
-        UserDetails user = (UserDetails) auth.getPrincipal();
+    public LoginResponse loginWithJWTToken(@RequestBody Member member) throws ValidationException {
+//        Authentication token = new UsernamePasswordAuthenticationToken(
+//                member.getAccount(),
+//                member.getPassword()
+//        );
+//        Authentication auth = authenticationManager.authenticate(token);
+//        UserDetails user = (UserDetails) auth.getPrincipal();
+//
+//        String jwt = jwtService.createLoginAccessToken(user);
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if ("anonymousUser".equals(principal)) {
+            throw new ValidationException("你尚未經過身份認證");
+        }
 
-        String jwt = jwtService.createLoginAccessToken(user);
-        return LoginResponse.of(jwt,user);
+        MemberUserDetails userDetails = (MemberUserDetails) principal;
+        System.out.printf("嗨，你的帳號：%s%n權限：%s%n",
+                userDetails.getUsername(),
+                userDetails.getAuthorities());
+        String jwt = jwtService.createLoginAccessToken(userDetails);
+        return LoginResponse.of(jwt,userDetails);
     }
 
     private static final String BEARER_PREFIX = "Bearer ";

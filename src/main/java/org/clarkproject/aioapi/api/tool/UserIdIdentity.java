@@ -10,11 +10,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserIdIdentity {
 
-    private MemberUserDetails ANONYMOUS_USER;
+    private final MemberUserDetails ANONYMOUS_USER = new MemberUserDetails(new MemberPO());
 
-    public void setMemberPO(MemberPO memberPO) {
-        ANONYMOUS_USER  = new MemberUserDetails(memberPO);
-    }
 
     private MemberUserDetails getMemberUserDetails() {
         SecurityContext context = SecurityContextHolder.getContext();
