@@ -6,7 +6,6 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
@@ -17,7 +16,8 @@ public class JWTService {
     private final int validSeconds;
     private final JwtParser jwtParser;
     public JWTService(
-            String secretKeyStr, int validSeconds) {
+            String secretKeyStr,
+            int validSeconds) {
         this.secretKey = Keys.hmacShaKeyFor(secretKeyStr.getBytes());
         this.validSeconds = validSeconds;
         this.jwtParser = Jwts.parser().verifyWith(secretKey).build();

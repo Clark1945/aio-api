@@ -7,16 +7,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Member implements UserDetails {
+public class Member {
 
     private String name;
     private String account;
@@ -29,6 +26,7 @@ public class Member implements UserDetails {
     private String ip;
     private MemberStatus status;
     private MemberRole role;
+
 
 
     /**
@@ -83,19 +81,5 @@ public class Member implements UserDetails {
         if (member.getAccount() == null) {
             throw new ValidationException("Account is required");
         }
-    }
-
-    public static void deleteValidation(Member member) {
-
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(this.getRole().name()));
-    }
-
-    @Override
-    public String getUsername() {
-        return this.getName();
     }
 }

@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-
     public MemberService(MemberRepository memberRepository) {
         this.memberRepository = memberRepository;
     }
@@ -50,7 +49,23 @@ public class MemberService {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public boolean login(Member member, String accessIp) throws ValidationException {
+    public void updateMemberStatus(MemberPO memberPO,boolean isPasswordMeet) {
+        if (isPasswordMeet) {
+            memberPO.setLastLogin(LocalDateTime.now());
+            memberPO.setLoginAttempts(0);
+        } else {
+            memberPO.setLoginAttempts(memberPO.getLoginAttempts() + 1);
+            boolean isLoginAttemptsOver = memberPO.getLoginAttempts() >= MemberConfig.ACCOUNT_RETRY_LIMIT;
+            if (isLoginAttemptsOver) {
+                log.info("Login error limitation exceeded! please try after 30 mins");
+                //TODO 三十分鐘鎖定
+            }
+        }
+        memberRepository.save(memberPO);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public boolean loginWithBasicToken(Member member, String accessIp) throws ValidationException {
         MemberPO memberPO = findActiveAccount(member.getAccount())
                 .orElseThrow(() -> new ValidationException("account not available"));
 

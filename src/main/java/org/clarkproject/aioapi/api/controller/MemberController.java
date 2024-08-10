@@ -42,7 +42,7 @@ public interface MemberController {
             content = {@Content(mediaType = "application/json",
                                 schema = @Schema(implementation = Member.class))})
     })
-    public ResponseEntity login(@Parameter(description = "Login member") @Valid @RequestBody Member member,HttpServletRequest request) throws ValidationException;
+    public ResponseEntity login(@Parameter(description = "Login member") @Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException;
 
     @Operation(summary = "Get member info",
             description = "Get member info with given id",
