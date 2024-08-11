@@ -1,11 +1,12 @@
 package org.clarkproject.aioapi.api.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.clarkproject.aioapi.api.obj.Member;
-import org.clarkproject.aioapi.api.obj.MemberConfig;
-import org.clarkproject.aioapi.api.orm.MemberPO;
-import org.clarkproject.aioapi.api.obj.MemberRole;
-import org.clarkproject.aioapi.api.obj.MemberStatus;
+import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
+import org.clarkproject.aioapi.api.obj.dto.Member;
+import org.clarkproject.aioapi.api.configure.MemberConfig;
+import org.clarkproject.aioapi.api.obj.po.MemberPO;
+import org.clarkproject.aioapi.api.obj.enums.MemberRole;
+import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.clarkproject.aioapi.api.tool.MemberMapper;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -71,7 +74,7 @@ public class MemberService {
 
         boolean isLoginIPMeet = memberPO.getIp().getHostAddress().equals(accessIp);
         if (!isLoginIPMeet) {
-            log.info("Login IP Change! former ip is {},login ip is {}", memberPO.getIp(), member.getIp());
+            log.info("Login IP Change! former ip is {},login ip is {}", memberPO.getIp(), accessIp);
         }
         boolean isPasswordMeet = memberPO.getPassword().equals(member.getPassword());
         if (isPasswordMeet) {
@@ -98,9 +101,9 @@ public class MemberService {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public boolean update(Member member, String accessIp) throws ValidationException {
+    public boolean update(Member member, String accessIp) throws IllegalObjectStatusException {
         MemberPO memberPO = findActiveAccount(member.getAccount())
-                .orElseThrow(() -> new ValidationException("account not available"));
+                .orElseThrow(() -> new IllegalObjectStatusException("account not available"));
 
         boolean isIPMeet = memberPO.getIp().getHostAddress().equals(accessIp);
         if (isIPMeet) {
@@ -133,9 +136,6 @@ public class MemberService {
         if (member.getAddress() != null && !member.getAddress().isEmpty()) {
             memberPO.setAddress(member.getAddress());
         }
-        if (member.getRole() != null && !member.getRole().name().isEmpty()) {
-            memberPO.setRole(member.getRole().name());
-        }
         if (member.getBirthday() != null) {
             memberPO.setBirthdate(member.getBirthday());
         }
@@ -143,9 +143,9 @@ public class MemberService {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public boolean disableMember(Long id, String accessIp) throws ValidationException {
+    public boolean disableMember(Long id, String accessIp) throws IllegalObjectStatusException {
         MemberPO memberPO = memberRepository.findById(id).filter( m -> m.getStatus().equals(MemberStatus.ACTIVE.name()))
-                .orElseThrow(() -> new ValidationException("account not available"));
+                .orElseThrow(() -> new IllegalObjectStatusException("account not available"));
 
         boolean isIPMeet = memberPO.getIp().getHostAddress().equals(accessIp);
         if (isIPMeet) {
@@ -163,11 +163,11 @@ public class MemberService {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public boolean frozeMember(Long id, String accessIp, Long adminId) throws ValidationException {
+    public boolean frozeMember(Long id, String accessIp, Long adminId) throws IllegalObjectStatusException {
         MemberPO memberPO = memberRepository.findById(id)
                 .filter( m -> m.getStatus().equals(MemberStatus.ACTIVE.name()))
                 .filter(m -> m.getRole().equals(MemberRole.ADMIN.name()))
-                .orElseThrow(() -> new ValidationException("Member not available"));
+                .orElseThrow(() -> new IllegalObjectStatusException("Member not available"));
 
         boolean isIPMeet = memberPO.getIp().getHostAddress().equals(accessIp);
         if (isIPMeet) {
@@ -202,6 +202,14 @@ public class MemberService {
             }
         } else {
             return null;
+        }
+    }
+
+    public static InetAddress stringToInetAddress(String ip) {
+        try {
+            return InetAddress.getByName(ip);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException("Invalid IP address: " + ip, e);
         }
     }
 }

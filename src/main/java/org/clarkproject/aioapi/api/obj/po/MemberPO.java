@@ -1,10 +1,10 @@
-package org.clarkproject.aioapi.api.orm;
+package org.clarkproject.aioapi.api.obj.po;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.clarkproject.aioapi.api.obj.MemberRole;
-import org.clarkproject.aioapi.api.obj.MemberStatus;
+import org.clarkproject.aioapi.api.obj.enums.MemberRole;
+import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
 
 import java.net.InetAddress;
 import java.time.LocalDate;

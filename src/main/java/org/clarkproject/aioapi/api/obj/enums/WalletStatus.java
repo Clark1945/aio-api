@@ -1,4 +1,4 @@
-package org.clarkproject.aioapi.api.obj;
+package org.clarkproject.aioapi.api.obj.enums;
 
 /**
  * 錢包狀態

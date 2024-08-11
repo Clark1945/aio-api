@@ -1,6 +1,6 @@
 package org.clarkproject.aioapi.api.repository;
 
-import org.clarkproject.aioapi.api.orm.WalletPO;
+import org.clarkproject.aioapi.api.obj.po.WalletPO;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 

@@ -1,9 +1,9 @@
 package org.clarkproject.aioapi.api.tool;
 
-import org.clarkproject.aioapi.api.obj.Member;
-import org.clarkproject.aioapi.api.orm.MemberPO;
-import org.clarkproject.aioapi.api.obj.MemberRole;
-import org.clarkproject.aioapi.api.obj.MemberStatus;
+import org.clarkproject.aioapi.api.obj.dto.Member;
+import org.clarkproject.aioapi.api.obj.po.MemberPO;
+import org.clarkproject.aioapi.api.obj.enums.MemberRole;
+import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -19,11 +19,11 @@ public interface MemberMapper {
 
     @Mapping(source = "phone",target = "phoneNumber")
     @Mapping(source = "birthday",target = "birthdate")
-    @Mapping(source = "ip", target = "ip", qualifiedByName = "stringToInetAddress")
+//    @Mapping(source = "ip", target = "ip", qualifiedByName = "stringToInetAddress")
     MemberPO memberToMemberPo(Member member);
     @Mapping(source = "phoneNumber",target = "phone")
     @Mapping(source = "birthdate",target = "birthday")
-    @Mapping(source = "ip", target = "ip", qualifiedByName = "inetAddressToString")
+//    @Mapping(source = "ip", target = "ip", qualifiedByName = "inetAddressToString")
     Member memberPOToMember(MemberPO memberPO);
 
     /**
@@ -46,6 +46,7 @@ public interface MemberMapper {
      * @param ip 請求IP
      * @return
      */
+    @Deprecated
     @Named("stringToInetAddress")
     default InetAddress stringToInetAddress(String ip) {
         try {

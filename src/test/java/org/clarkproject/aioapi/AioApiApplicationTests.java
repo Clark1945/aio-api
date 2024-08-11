@@ -1,7 +1,6 @@
 package org.clarkproject.aioapi;
 
-import org.clarkproject.aioapi.api.obj.Member;
-import org.clarkproject.aioapi.api.orm.MemberPO;
+import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.service.MemberService;
 import org.junit.jupiter.api.Test;

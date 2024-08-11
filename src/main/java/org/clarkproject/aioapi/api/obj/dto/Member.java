@@ -1,13 +1,12 @@
-package org.clarkproject.aioapi.api.obj;
+package org.clarkproject.aioapi.api.obj.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import org.clarkproject.aioapi.api.exception.ValidationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.clarkproject.aioapi.api.obj.enums.MemberRole;
+import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
 
 import java.time.LocalDate;
-import java.util.*;
 
 @Data
 @Builder
@@ -16,6 +15,7 @@ import java.util.*;
 public class Member {
 
     private String name;
+    @Schema(description = "Unique identifier of the User", example = "Clark")
     private String account;
     private String password;
     private String email;
@@ -23,9 +23,9 @@ public class Member {
     private String address;
     private LocalDate birthday;
 
-    private String ip;
-    private MemberStatus status;
-    private MemberRole role;
+//    private String ip;
+//    private MemberStatus status;
+//    private MemberRole role;
 
 
 
@@ -63,7 +63,7 @@ public class Member {
      * @param member
      * @throws ValidationException
      */
-    public static void loginValidate(Member member) throws ValidationException {
+    public static void loginValidate(LoginObject member) throws ValidationException {
         if (member.getAccount() == null || member.getAccount().isEmpty()) {
             throw new ValidationException("Account is required");
         }

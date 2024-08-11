@@ -6,7 +6,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.clarkproject.aioapi.api.obj.MemberRole;
 import org.clarkproject.aioapi.api.obj.MemberUserDetails;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.service.JWTService;
@@ -26,12 +25,12 @@ import java.util.stream.Collectors;
 
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final List<String> EXCLUDED_PATHS = Arrays.asList("/api/1.0/getJWTToken");
+public class JWTAuthenticationFilter extends OncePerRequestFilter {
+    private static final List<String> INCLUDE_PATHS = Arrays.asList("/api/1.0/loginWithJWTToken");
     private static final String BEARER_PREFIX = "Bearer ";
     private final JWTService jwtService;
     private final MemberRepository memberRepository;
-    public JwtAuthenticationFilter(JWTService jwtService, MemberRepository memberRepository) {
+    public JWTAuthenticationFilter(JWTService jwtService, MemberRepository memberRepository) {
         this.jwtService = jwtService;
         this.memberRepository = memberRepository;
     }
@@ -78,6 +77,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        return EXCLUDED_PATHS.contains(request.getServletPath());
+        return !INCLUDE_PATHS.contains(request.getServletPath());
     }
 }

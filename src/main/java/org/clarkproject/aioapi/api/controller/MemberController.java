@@ -11,8 +11,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
 import org.clarkproject.aioapi.api.exception.ValidationException;
-import org.clarkproject.aioapi.api.obj.Member;
+import org.clarkproject.aioapi.api.obj.APIResponse;
+import org.clarkproject.aioapi.api.obj.dto.LoginObject;
+import org.clarkproject.aioapi.api.obj.dto.Member;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,30 +32,29 @@ public interface MemberController {
     @Operation(summary = "Register member",
             description = "Please use unique account name to register your account.",
             tags = {"Member"})
-    @ApiResponses(value = { @ApiResponse(description = "successful operation",
+    @ApiResponses(value = { @ApiResponse(description = "success",
                                         content = {@Content(mediaType = "application/json",
-                                                            schema = @Schema(implementation = Member.class))})
+                                                            schema = @Schema(implementation = APIResponse.class))})
     })
-    public ResponseEntity register(@Parameter(description = "Register member") @Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException;
+    ResponseEntity<APIResponse> register(@Parameter(description = "Register member") @Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException, IllegalObjectStatusException;
 
     @Operation(summary = "Login member",
             description = "Use account and password to login.",
             tags = {"Member"})
-    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "successful operation",
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "success",
             content = {@Content(mediaType = "application/json",
-                                schema = @Schema(implementation = Member.class))})
+                                schema = @Schema(implementation = APIResponse.class))})
     })
-    public ResponseEntity login(@Parameter(description = "Login member") @Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException;
+    ResponseEntity<APIResponse> login(@Parameter(description = "Login member") @Valid @RequestBody LoginObject member, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
 
     @Operation(summary = "Get member info",
             description = "Get member info with given id",
             tags = {"Member"})
     @ApiResponses(value ={
             @ApiResponse(responseCode = "200", description = "Successful operation", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = Member.class)),}),
-            @ApiResponse(description = "successful operation")
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = APIResponse.class)),})
     })
-    public ResponseEntity getMember(@RequestParam("id") Long id);
+    ResponseEntity<APIResponse> getMember(@RequestParam("id") Long id);
 
     @Operation(summary = "Update member", description = "Update with Member",tags = {"Member"})
     @ApiResponses(value = {
@@ -60,7 +62,7 @@ public interface MemberController {
             @ApiResponse(responseCode = "400", description = "Invalid account name"),
             @ApiResponse(responseCode = "404", description = "Not found")
     })
-    public ResponseEntity updateMember(@RequestBody Member member, HttpServletRequest request) throws ValidationException;
+    ResponseEntity updateMember(@RequestBody Member member, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
 
     @Operation(summary = "Disable member by id", tags = { "Member" })
     @ApiResponses(value = {
@@ -69,7 +71,7 @@ public interface MemberController {
                     @Content(mediaType = "application/xml", schema = @Schema(implementation = Member.class)) }),
             @ApiResponse(responseCode = "400", description = "Invalid id supplied", content = @Content),
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content) })
-    public ResponseEntity disableMember(@Parameter(description = "The id that needs to be disable.", required = true) @RequestParam Long id, HttpServletRequest request) throws ValidationException;
+    ResponseEntity disableMember(@Parameter(description = "The id that needs to be disable.", required = true) @RequestParam Long id, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
 
     @Operation(summary = "Froze number by ID", tags = { "Member" })
     @ApiResponses(value = {
@@ -79,5 +81,5 @@ public interface MemberController {
                     description = "successful operation", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "400", description = "Invalid username/password supplied", content = @Content) })
     @GetMapping(value = "/user/login", produces = { "application/xml", "application/json" })
-    public ResponseEntity frozeMember(@NotNull @Parameter(description = "Request Map") @Valid @RequestBody HashMap<String,Long> reqMap, HttpServletRequest request) throws ValidationException;
+    ResponseEntity frozeMember(@NotNull @Parameter(description = "Request Map") @Valid @RequestBody HashMap<String,Long> reqMap, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
 }

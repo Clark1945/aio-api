@@ -1,9 +1,10 @@
 package org.clarkproject.aioapi.api.service;
 
-import org.clarkproject.aioapi.api.obj.*;
-import org.clarkproject.aioapi.api.orm.MemberPO;
-import org.clarkproject.aioapi.api.orm.WalletPO;
-import org.clarkproject.aioapi.api.orm.WalletTransactionPO;
+import org.clarkproject.aioapi.api.obj.dto.TransactionInfo;
+import org.clarkproject.aioapi.api.obj.enums.*;
+import org.clarkproject.aioapi.api.obj.po.MemberPO;
+import org.clarkproject.aioapi.api.obj.po.WalletPO;
+import org.clarkproject.aioapi.api.obj.po.WalletTransactionPO;
 import org.clarkproject.aioapi.api.repository.WalletRepository;
 import org.clarkproject.aioapi.api.repository.WalletTransactionRepository;
 import org.clarkproject.aioapi.api.exception.ValidationException;

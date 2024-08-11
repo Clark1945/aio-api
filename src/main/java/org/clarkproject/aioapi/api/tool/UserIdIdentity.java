@@ -1,7 +1,7 @@
 package org.clarkproject.aioapi.api.tool;
 
 import org.clarkproject.aioapi.api.obj.MemberUserDetails;
-import org.clarkproject.aioapi.api.orm.MemberPO;
+import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;

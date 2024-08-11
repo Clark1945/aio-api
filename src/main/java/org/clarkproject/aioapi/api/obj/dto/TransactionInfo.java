@@ -1,4 +1,4 @@
-package org.clarkproject.aioapi.api.obj;
+package org.clarkproject.aioapi.api.obj.dto;
 
 import lombok.Data;
 import org.clarkproject.aioapi.api.exception.ValidationException;

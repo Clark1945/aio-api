@@ -1,5 +1,6 @@
 package org.clarkproject.aioapi.api.configure;
 
+import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
 import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -17,22 +18,25 @@ import java.time.Instant;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+
     @ExceptionHandler({ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleValidationException(ValidationException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
-        problemDetail.setTitle("Validation Fail");
-        problemDetail.setProperty("errorCategory", "Generic Exception");
+        problemDetail.setTitle("VALIDATION ERROR");
+        problemDetail.setProperty("errorCategory", "GENERIC");
+        problemDetail.setProperty("message", "please check your input");
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;
     }
 
-    @ExceptionHandler(NullPointerException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ProblemDetail handleBookNotFound(NullPointerException e) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
-        problemDetail.setTitle("Data Not Found");
-        problemDetail.setProperty("errorCategory", "Generic Exception");
+    @ExceptionHandler({IllegalObjectStatusException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleValidationException(IllegalObjectStatusException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        problemDetail.setTitle("INCORRECT STATUS");
+        problemDetail.setProperty("errorCategory", "GENERIC");
+        problemDetail.setProperty("message", "incorrect operation");
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;
     }
@@ -41,8 +45,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handlePreconditionException(ResponseStatusException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
-        problemDetail.setTitle("Data Not Found");
-        problemDetail.setProperty("errorCategory", "Generic Exception");
+        problemDetail.setTitle("OPERATION TIMEOUT");
+        problemDetail.setProperty("errorCategory", "UNEXPECTED");
+        problemDetail.setProperty("message", "unknown error happened. Please contact the maintainer");
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;
     }

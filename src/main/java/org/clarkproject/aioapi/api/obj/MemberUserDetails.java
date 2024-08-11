@@ -1,7 +1,7 @@
 package org.clarkproject.aioapi.api.obj;
 
 import lombok.Getter;
-import org.clarkproject.aioapi.api.orm.MemberPO;
+import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 public class MemberUserDetails implements UserDetails {
