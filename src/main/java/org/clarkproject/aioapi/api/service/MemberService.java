@@ -23,7 +23,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service("MemberService")
 public class MemberService {
 
     private final MemberRepository memberRepository;

@@ -23,12 +23,6 @@ public class Member {
     private String address;
     private LocalDate birthday;
 
-//    private String ip;
-//    private MemberStatus status;
-//    private MemberRole role;
-
-
-
     /**
      * 會員註冊 驗證
      * @param member

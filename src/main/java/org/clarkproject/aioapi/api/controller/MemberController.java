@@ -13,7 +13,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
 import org.clarkproject.aioapi.api.exception.ValidationException;
-import org.clarkproject.aioapi.api.obj.APIResponse;
+import org.clarkproject.aioapi.api.obj.dto.APIResponse;
 import org.clarkproject.aioapi.api.obj.dto.LoginObject;
 import org.clarkproject.aioapi.api.obj.dto.Member;
 import org.springframework.http.ResponseEntity;

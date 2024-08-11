@@ -1,8 +1,7 @@
-package org.clarkproject.aioapi.api.obj;
+package org.clarkproject.aioapi.api.obj.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Data
 public class APIResponse {

@@ -1,6 +1,6 @@
 package org.clarkproject.aioapi.api.controller;
 
-import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
+import org.clarkproject.aioapi.api.obj.enums.ResponseStatusMessage;
 import org.clarkproject.aioapi.api.obj.dto.TransactionInfo;
 import org.clarkproject.aioapi.api.obj.po.WalletTransactionPO;
 import org.clarkproject.aioapi.api.service.WalletService;

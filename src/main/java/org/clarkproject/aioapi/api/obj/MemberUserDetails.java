@@ -15,8 +15,6 @@ public class MemberUserDetails implements UserDetails {
     private MemberPO memberPO;
     private String username;
 
-    public MemberUserDetails() {
-    }
     public MemberUserDetails(MemberPO memberPO) {
         this.memberPO = memberPO;
     }
@@ -60,7 +58,6 @@ public class MemberUserDetails implements UserDetails {
     public void setMemberAuthorities(List<String> memberAuthorities) {
         // 将List<MemberRole> 转换为以逗号分割的字符串
         // 假设 MemberRole 有 getRoleName 方法
-        String rolesWithComon = String.join(",", memberAuthorities);
-        this.role = rolesWithComon;
+        this.role = String.join(",", memberAuthorities);
     }
 }

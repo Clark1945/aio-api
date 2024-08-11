@@ -3,14 +3,14 @@ package org.clarkproject.aioapi.api.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
-import org.clarkproject.aioapi.api.obj.APIResponse;
-import org.clarkproject.aioapi.api.obj.LoginResponse;
+import org.clarkproject.aioapi.api.obj.dto.APIResponse;
+import org.clarkproject.aioapi.api.obj.dto.LoginResponse;
 import org.clarkproject.aioapi.api.obj.dto.LoginObject;
 import org.clarkproject.aioapi.api.obj.dto.Member;
 import org.clarkproject.aioapi.api.obj.MemberUserDetails;
 import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
 import org.clarkproject.aioapi.api.obj.po.MemberPO;
-import org.clarkproject.aioapi.api.obj.ResponseStatusMessage;
+import org.clarkproject.aioapi.api.obj.enums.ResponseStatusMessage;
 import org.clarkproject.aioapi.api.service.JWTService;
 import org.clarkproject.aioapi.api.service.MemberService;
 import org.clarkproject.aioapi.api.tool.MemberMapper;
@@ -28,10 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Optional;
 
