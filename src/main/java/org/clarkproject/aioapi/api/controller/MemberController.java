@@ -62,7 +62,7 @@ public interface MemberController {
             @ApiResponse(responseCode = "400", description = "Invalid account name"),
             @ApiResponse(responseCode = "404", description = "Not found")
     })
-    ResponseEntity updateMember(@RequestBody Member member, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
+    ResponseEntity<APIResponse> updateMember(@RequestBody Member member, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
 
     @Operation(summary = "Disable member by id", tags = { "Member" })
     @ApiResponses(value = {
@@ -71,15 +71,17 @@ public interface MemberController {
                     @Content(mediaType = "application/xml", schema = @Schema(implementation = Member.class)) }),
             @ApiResponse(responseCode = "400", description = "Invalid id supplied", content = @Content),
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content) })
-    ResponseEntity disableMember(@Parameter(description = "The id that needs to be disable.", required = true) @RequestParam Long id, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
+    ResponseEntity<APIResponse> disableMember(@Parameter(description = "The id that needs to be disable.", required = true) @RequestParam Long id, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
 
-    @Operation(summary = "Froze number by ID", tags = { "Member" })
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", headers = {
-                    @Header(name = "X-Rate-Limit", description = "calls per hour allowed by the user", schema = @Schema(type = "integer", format = "int32")),
-                    @Header(name = "X-Expires-After", description = "date in UTC when toekn expires", schema = @Schema(type = "string", format = "date-time")) },
-                    description = "successful operation", content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid username/password supplied", content = @Content) })
-    @GetMapping(value = "/user/login", produces = { "application/xml", "application/json" })
-    ResponseEntity frozeMember(@NotNull @Parameter(description = "Request Map") @Valid @RequestBody HashMap<String,Long> reqMap, HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
+//    @Operation(summary = "Froze number by ID", tags = { "Member" })
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", headers = {
+//                    @Header(name = "X-Rate-Limit", description = "calls per hour allowed by the user", schema = @Schema(type = "integer", format = "int32")),
+//                    @Header(name = "X-Expires-After", description = "date in UTC when toekn expires", schema = @Schema(type = "string", format = "date-time")) },
+//                    description = "successful operation", content = @Content(schema = @Schema(implementation = String.class))),
+//            @ApiResponse(responseCode = "400", description = "Invalid username/password supplied", content = @Content) })
+//    @GetMapping(value = "/user/login", produces = { "application/xml", "application/json" })
+//    ResponseEntity<APIResponse> frozeMember(@NotNull @Parameter(description = "Request id") @RequestParam Long id,
+//                               @RequestParam Long adminId,
+//                               HttpServletRequest request) throws ValidationException,IllegalObjectStatusException;
 }

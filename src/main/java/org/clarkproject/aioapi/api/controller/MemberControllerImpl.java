@@ -272,11 +272,10 @@ public class MemberControllerImpl implements MemberController {
     }
 
     @DeleteMapping("/member")
-    public ResponseEntity<APIResponse> frozeMember(@RequestBody HashMap<String, Long> reqMap,
+    public ResponseEntity<APIResponse> frozeMember(@RequestParam Long id,
+                                                   @RequestParam Long adminId,
                                                    HttpServletRequest request) throws ValidationException, IllegalObjectStatusException {
         String accessIp = request.getRemoteAddr();
-        Long id = reqMap.get("id");
-        Long adminId = reqMap.get("adminId");
         APIResponse apiResponse;
 
         if (id == null || adminId == null) {

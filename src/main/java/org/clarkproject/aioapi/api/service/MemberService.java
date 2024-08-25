@@ -163,10 +163,13 @@ public class MemberService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public boolean frozeMember(Long id, String accessIp, Long adminId) throws IllegalObjectStatusException {
-        MemberPO memberPO = memberRepository.findById(id)
-                .filter( m -> m.getStatus().equals(MemberStatus.ACTIVE.name()))
-                .filter(m -> m.getRole().equals(MemberRole.ADMIN.name()))
-                .orElseThrow(() -> new IllegalObjectStatusException("Member not available"));
+        boolean isAdminLevel = isAdmin(adminId);
+        if (!isAdminLevel) {
+            throw new IllegalObjectStatusException("account could not access authority");
+        }
+        MemberPO memberPO = findAccountById(id).orElseThrow(
+                () -> new IllegalObjectStatusException("account not available")
+        );
 
         boolean isIPMeet = memberPO.getIp().getHostAddress().equals(accessIp);
         if (isIPMeet) {
@@ -181,6 +184,13 @@ public class MemberService {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private boolean isAdmin(Long adminId) {
+        return memberRepository.findById(adminId)
+                .filter( m -> m.getStatus().equals(MemberStatus.ACTIVE.name()))
+                .filter(m -> m.getRole().equals(MemberRole.ADMIN.name()))
+                .isPresent();
     }
 
     public List<Member> findAllActiveMember() {

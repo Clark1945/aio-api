@@ -1,6 +1,7 @@
 package org.clarkproject.aioapi.api.obj;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,6 +14,7 @@ import java.util.List;
 @Getter
 public class MemberUserDetails implements UserDetails {
     private MemberPO memberPO;
+    @Setter
     private String username;
 
     public MemberUserDetails(MemberPO memberPO) {
@@ -26,9 +28,6 @@ public class MemberUserDetails implements UserDetails {
     // 實作介面規範的方法
     public String getUsername() {
         return memberPO.getAccount();
-    }
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {

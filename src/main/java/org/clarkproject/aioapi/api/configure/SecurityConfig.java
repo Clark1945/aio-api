@@ -46,28 +46,6 @@ public class SecurityConfig {
     }
 
     /**
-     * 在記憶體中管理帳號
-     * Spring Security的User類別實作了UserDetails，收集完後放到InMemoryUserDetailsManager交由記憶體管理
-     * @return
-     */
-//    @Bean
-//    public UserDetailsService inMemoryUserDetailsManager() {
-//        List<MemberPO> memberPOList = memberRepository.findAllByStatus(MemberStatus.ACTIVE.name());
-//        // 以自定義類別取代
-//        List<UserDetails> registeredUserList = memberList.stream()
-//                .map(member -> User
-//                        .withUsername(member.getAccount())
-//                        .password(member.getPassword()) // {noop} 代表不加密 {bcrypt} BCrypt演算法、{sha256}SHA256演算法
-//                        .authorities("ROLE_" + member.getRole().name())
-//                        .build())
-//                .collect(Collectors.toList());
-//        List<UserDetails> registeredUserList = memberPOList.stream()
-//                .map(MemberUserDetails::new)
-//                .collect(Collectors.toList());
-//        return new InMemoryUserDetailsManager(registeredUserList); // 設定可以登入的User
-//    }
-
-    /**
      * 查詢所有已啟用的帳號，並將資訊存到UserDetailsServiceImpl中
      * @return
      */
@@ -111,6 +89,7 @@ public class SecurityConfig {
                 .build();
     }
 
+
     @Bean
     public JWTService JWTService(
             @Value("${jwt.secret-key}") String secretKeyStr,
@@ -126,4 +105,26 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.getSharedObject(AuthenticationManagerBuilder.class).build();
     }
+
+    /**
+     * 在記憶體中管理帳號
+     * Spring Security的User類別實作了UserDetails，收集完後放到InMemoryUserDetailsManager交由記憶體管理
+     * @return
+     */
+//    @Bean
+//    public UserDetailsService inMemoryUserDetailsManager() { // 使用原生User物件的做法
+//        List<MemberPO> memberPOList = memberRepository.findAllByStatus(MemberStatus.ACTIVE.name());
+//        // 以自定義類別取代
+//        List<UserDetails> registeredUserList = memberList.stream()
+//                .map(member -> User
+//                        .withUsername(member.getAccount())
+//                        .password(member.getPassword()) // {noop} 代表不加密 {bcrypt} BCrypt演算法、{sha256}SHA256演算法
+//                        .authorities("ROLE_" + member.getRole().name())
+//                        .build())
+//                .collect(Collectors.toList());
+//        List<UserDetails> registeredUserList = memberPOList.stream()
+//                .map(MemberUserDetails::new)
+//                .collect(Collectors.toList());
+//        return new InMemoryUserDetailsManager(registeredUserList); // 設定可以登入的User
+//    }
 }

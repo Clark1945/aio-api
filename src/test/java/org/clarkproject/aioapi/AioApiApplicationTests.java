@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Optional;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -35,10 +35,5 @@ class AioApiApplicationTests {
         Mockito.when(memberRepository.findByAccount(Mockito.isNull())).thenReturn(memberPOTest);
         Optional<MemberPO> memberPO1 = memberService.findActiveAccount(null);
         assert !memberPO1.isPresent();
-    }
-
-    @Test
-    void optionalTest3() {
-
     }
 }
