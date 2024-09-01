@@ -8,11 +8,15 @@ import io.swagger.v3.oas.models.info.License;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.repository.WalletRepository;
 import org.clarkproject.aioapi.api.repository.WalletTransactionRepository;
+import org.clarkproject.aioapi.api.service.JWTService;
 import org.clarkproject.aioapi.api.service.MemberService;
 import org.clarkproject.aioapi.api.service.WalletService;
+import org.clarkproject.aioapi.api.tool.UserIdIdentity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class BeanConfig {
@@ -20,14 +24,27 @@ public class BeanConfig {
     private final MemberRepository memberRepository;
     private final WalletRepository walletRepository;
     private final WalletTransactionRepository walletTransactionRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final UserIdIdentity userIdentity;
+    private final AuthenticationManager authenticationManager;
+    private final JWTService jwtService;
 
     public BeanConfig(MemberRepository memberRepository,
                       WalletRepository walletRepository,
-                      WalletTransactionRepository walletTransactionRepository) {
+                      WalletTransactionRepository walletTransactionRepository,
+                      PasswordEncoder passwordEncoder,
+                      UserIdIdentity userIdentity,
+                      AuthenticationManager authenticationManager,
+                      JWTService jwtService) {
         this.memberRepository = memberRepository;
         this.walletRepository = walletRepository;
         this.walletTransactionRepository = walletTransactionRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.userIdentity = userIdentity;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
+
     /**
      * Swagger文件Header
      * @param appVersion
@@ -57,10 +74,12 @@ public class BeanConfig {
 
     @Bean
     public MemberService getMemberService() {
-        return new MemberService(memberRepository);
+        return new MemberService(memberRepository,passwordEncoder,userIdentity,authenticationManager,jwtService);
     }
+
     @Bean
     public WalletService getWalletService(MemberService memberService) {
         return new WalletService(memberService,walletRepository,walletTransactionRepository);
     }
+
 }

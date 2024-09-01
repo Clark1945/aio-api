@@ -2,6 +2,7 @@ package org.clarkproject.aioapi.api.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
+import org.clarkproject.aioapi.api.obj.MemberUserDetails;
 import org.clarkproject.aioapi.api.obj.dto.Member;
 import org.clarkproject.aioapi.api.configure.MemberConfig;
 import org.clarkproject.aioapi.api.obj.po.MemberPO;
@@ -10,7 +11,12 @@ import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.clarkproject.aioapi.api.tool.MemberMapper;
-import org.springframework.stereotype.Service;
+import org.clarkproject.aioapi.api.tool.UserIdIdentity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +32,20 @@ import java.util.stream.Collectors;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    public MemberService(MemberRepository memberRepository) {
+    private final PasswordEncoder passwordEncoder;
+    private final UserIdIdentity userIdentity;
+    private final AuthenticationManager authenticationManager;
+    private final JWTService jwtService;
+    public MemberService(MemberRepository memberRepository,
+                         PasswordEncoder passwordEncoder,
+                         UserIdIdentity userIdentity,
+                         AuthenticationManager authenticationManager,
+                         JWTService jwtService) {
         this.memberRepository = memberRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.userIdentity = userIdentity;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -220,5 +238,88 @@ public class MemberService {
         } catch (UnknownHostException e) {
             throw new RuntimeException("Invalid IP address: " + ip, e);
         }
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void register(Member member,String accessIp) {
+        boolean isMemberExisted = findActiveAccount(member.getAccount()).isPresent();
+        if (isMemberExisted) {
+            throw new IllegalObjectStatusException("Member already exists");
+        }
+
+        MemberPO memberPO = MemberMapper.INSTANCE.memberToMemberPo(member);
+        memberPO.setIp(MemberService.stringToInetAddress(accessIp));
+
+        saveMember(memberPO);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED,timeout = 30)
+    public boolean login(MemberPO memberPO, String accessIp,String password) {
+        boolean isLoginIPMeet = memberPO.getIp().getHostAddress().equals(accessIp);
+        if (!isLoginIPMeet) {
+            log.info("Login IP Change! former ip is {},login ip is {}", memberPO.getIp(), accessIp);
+        }
+
+        boolean isPasswordMeet = passwordEncoder.matches(password, memberPO.getPassword());
+        try {
+            updateMemberStatus(memberPO, isPasswordMeet);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalObjectStatusException("Failed to login member");
+        }
+        return isPasswordMeet;
+
+    }
+
+    /**
+     * 驗證BASIC Token 如果成功回傳username
+     * @return
+     */
+    public String validateWithBasicToken() {
+        if (userIdentity.isAnonymous()) {
+            throw new ValidationException("你尚未經過身份認證");
+        }
+
+        System.out.printf(
+                "你的帳號：%s%n信箱：%s%n權限：%s%n",
+                userIdentity.getUsername(),
+                userIdentity.getEmail(),
+                userIdentity.getAuthority()
+        );
+
+        return userIdentity.getUsername();
+    }
+
+    public MemberUserDetails getJWTMember(Member member) {
+        Authentication token = new UsernamePasswordAuthenticationToken(
+                member.getAccount(),
+                member.getPassword()
+        );
+        Authentication auth = authenticationManager.authenticate(token);
+        return  (MemberUserDetails) auth.getPrincipal();
+    }
+
+    public String getJWTToken(MemberUserDetails user) {
+        return jwtService.createLoginAccessToken(user);
+    }
+
+    public void validateWithJWTToken() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if ("anonymousUser".equals(principal)) {
+            throw new ValidationException("你尚未經過身份認證");
+        }
+
+        MemberUserDetails userDetails = (MemberUserDetails) principal;
+        System.out.printf("嗨，你的帳號：%s%n權限：%s%n",
+                userDetails.getUsername(),
+                userDetails.getAuthorities());
+//        改由filter實作了
+//        Map<String, Object> jwtResult;
+//        String jwt = authorization.substring(BEARER_PREFIX.length());
+//        try {
+//            jwtResult = jwtService.parseToken(jwt);
+//        } catch (JwtException e) {
+//            throw new BadCredentialsException(e.getMessage(), e);
+//        }
     }
 }

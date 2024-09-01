@@ -8,7 +8,7 @@ import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.service.JWTService;
 import org.clarkproject.aioapi.api.tool.JWTAuthenticationFilter;
-import org.clarkproject.aioapi.api.tool.UserDetailsServiceImpl;
+import org.clarkproject.aioapi.api.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -85,7 +85,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // disable CSRF
 //                .formLogin(Customizer.withDefaults()) // 用Spring Security提供的表單登入
                 .httpBasic(Customizer.withDefaults()) // HTTP BASIC 登入
-                .addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class) // FWT認證filter
+                .addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class) // JWT認證filter
                 .build();
     }
 
