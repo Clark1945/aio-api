@@ -1,5 +1,6 @@
 package org.clarkproject.aioapi.api.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
 import org.clarkproject.aioapi.api.obj.MemberUserDetails;

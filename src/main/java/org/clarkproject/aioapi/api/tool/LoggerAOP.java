@@ -5,11 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
-import org.clarkproject.aioapi.api.obj.AccessLog;
+import org.clarkproject.aioapi.api.obj.RequestAccessLog;
 import org.clarkproject.aioapi.api.service.AccessLogService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -49,8 +50,8 @@ public class LoggerAOP {
         System.out.println("responseLog = " + responseLog);
 
         // 紀錄 AccessLog 並寫入mongoDB
-        AccessLog accessLog = new AccessLog(requestLog, responseLog, LocalDateTime.now());
-        accessLogService.insertAccessLog(accessLog);
+        RequestAccessLog requestAccessLog = new RequestAccessLog(requestLog, responseLog, LocalDateTime.now());
+        accessLogService.insertAccessLog(requestAccessLog);
 
         // 紀錄執行時間
         long elapsedTime = System.currentTimeMillis() - startTime.get();
@@ -62,23 +63,26 @@ public class LoggerAOP {
     private String getRequestLog(JoinPoint joinPoint) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 
+        // 使用 Spring 提供的 ContentCachingRequestWrapper 包裝 HttpServletRequest (避免直接讀取InputStream)
+        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
+
         StringBuilder logBuilder = new StringBuilder();
         // 獲取所有的 headers
-        Enumeration<String> headerNames = request.getHeaderNames();
+        Enumeration<String> headerNames = wrappedRequest.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
-            String headerValue = request.getHeader(headerName);
+            String headerValue = wrappedRequest.getHeader(headerName);
             logBuilder.append(headerName).append(": ").append(headerValue).append("; ");
         }
 
         // 獲取 query string
-        String queryString = request.getQueryString();
+        String queryString = wrappedRequest.getQueryString();
         if (queryString != null) {
             logBuilder.append("\nQueryString: ").append(queryString).append("; ");
         }
 
         // 獲取 RequestBody
-        String requestBody = getRequestBody(request);
+        String requestBody = getRequestBody(wrappedRequest);
         logBuilder.append("\nRequestBody: ").append(requestBody);
 
         return logBuilder.toString();

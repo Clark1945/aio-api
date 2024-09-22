@@ -1,7 +1,9 @@
 package org.clarkproject.aioapi.api.obj.po;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.clarkproject.aioapi.api.obj.enums.MemberRole;
 import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
@@ -14,6 +16,8 @@ import java.time.LocalDateTime;
 @Table(name = "member")
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class MemberPO {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

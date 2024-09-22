@@ -5,31 +5,39 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.clarkproject.aioapi.api.controller.MemberControllerImpl;
 import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
+import org.clarkproject.aioapi.api.obj.dto.APIResponse;
+import org.clarkproject.aioapi.api.obj.dto.Member;
 import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.service.MemberService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
 class AioApiApplicationTests {
 
     @MockBean
     MemberRepository memberRepository;
     @Autowired
     MemberService memberService;
+
     @Test
     void optionalTest1() {
         Mockito.when(memberRepository.findByAccount(Mockito.isNull())).thenReturn(null);
@@ -46,37 +54,53 @@ class AioApiApplicationTests {
         assert !memberPO1.isPresent();
     }
 
+//    @Autowired
+//    private ApplicationContext applicationContext;
+//    @Mock
+//    MemberRepository memberRepository;
+//    @Mock
+//    MemberService memberService;
+//
+//    @Test
+//    void webTestClient() {
+//        MemberPO memberPO = new MemberPO();
+//        memberPO.setStatus("ACTIVE");
+//        memberPO.setName("Clark");
+//        Mockito.when(memberRepository.findById(1L)).thenReturn(Optional.ofNullable(memberPO));
+//
+//        WebTestClient client = WebTestClient.bindToApplicationContext(applicationContext).build();
+//        client.get().uri(uriBuilder ->
+//                        uriBuilder.path("/api/1.0/member")
+//                                .queryParam("id", "1")
+//                                .build())
+//                .accept(MediaType.APPLICATION_JSON)
+//                .exchange()
+//                .expectStatus().isOk()
+//                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+//                .expectBody(Member.class)
+//                .consumeWith(response -> {
+//                    Member member = response.getResponseBody();
+//                    assertNotNull(member);
+//                    assertEquals("Clark", member.getName());
+//                });
+//    }
+
+    @Autowired
+    private MockMvc mockMvc;
+
     @Test
-    public void testOptionalTest3() {
-//        Student st1 = new Student(1,"Joe",17);
-//        Student st2 = new Student(2,"Sean",10,null);
-//        Student st3 = new Student(3,null,43);
-//        Student st4 = new Student(4,"Alan",88);
-//        Student st5 = new Student(5,"Michael",0);
-//        ArrayList<Student> studentList = new ArrayList<>();
-//        studentList.add(st1);
-//        studentList.add(st2);
-//        studentList.add(st3);
-//        studentList.add(st4);
-//        studentList.add(st5);
+    void testGetMember() throws Exception {
+        MemberPO memberPO = new MemberPO();
+        memberPO.setStatus("ACTIVE");
+        memberPO.setName("Clark");
+        Mockito.when(memberRepository.findById(1L)).thenReturn(Optional.ofNullable(memberPO));
 
-//        Optional.ofNullable(st1)
-//                .filter(student -> student.getAge()> 18)
-//                .filter(student -> student.getName().equals("Joe"))
-//                .isPresent();
-//        Family motherName = Optional.ofNullable(st2)
-//                .map(s -> s.getFamily())
-//                .filter( f -> f.getMotherName().equals("Mary"))
-//                .orElseThrow(() -> new IllegalObjectStatusException("NotFound"));
-//        System.out.println(motherName);
-//        Student student = Optional.of(st).orElse(new Student());
+        mockMvc.perform(get("/api/1.0/member")
+                        .param("id", "1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.info.name").value("Clark"));
     }
-
-    void printFail() {
-        System.out.println("Faile");
-    }
-
-
-
 
 }

@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 @Data
 @ToString
 @Document(collection = "access_log")
-public class AccessLog {
+//@Entity(name = "access_log")
+public class RequestAccessLog {
     private final String requestLog;
     private final String responseLog;
     private final LocalDateTime timestamp;
