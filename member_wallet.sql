@@ -1,3 +1,4 @@
+create database practice;
 -- 創建 ENUM 類型
 CREATE TYPE member_status AS ENUM ('ACTIVE', 'INACTIVE', 'SUSPENDED');
 CREATE TYPE member_role AS ENUM ('USER', 'ADMIN');

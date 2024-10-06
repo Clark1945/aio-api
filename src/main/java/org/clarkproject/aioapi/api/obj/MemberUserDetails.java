@@ -13,7 +13,7 @@ import java.util.List;
 
 @Getter
 public class MemberUserDetails implements UserDetails {
-    private MemberPO memberPO;
+    private final MemberPO memberPO;
     @Setter
     private String username;
 

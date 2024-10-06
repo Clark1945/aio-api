@@ -13,16 +13,20 @@ import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.clarkproject.aioapi.api.tool.MemberMapper;
 import org.clarkproject.aioapi.api.tool.UserIdIdentity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -30,13 +34,19 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Service
 public class MemberService {
+
+    @Autowired
+    private RedisTemplate<String,String> redisTemplate;
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserIdIdentity userIdentity;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService;
+
+    @Autowired
     public MemberService(MemberRepository memberRepository,
                          PasswordEncoder passwordEncoder,
                          UserIdIdentity userIdentity,
@@ -215,7 +225,7 @@ public class MemberService {
     public List<Member> findAllActiveMember() {
         return memberRepository.findAllByStatus(MemberStatus.ACTIVE.name())
                 .stream()
-                .map(MemberMapper.INSTANCE::memberPOToMember)
+                .map(new MemberMapper(){}::memberPOToMember)
                 .collect(Collectors.toList());
     }
 
@@ -247,8 +257,8 @@ public class MemberService {
         if (isMemberExisted) {
             throw new IllegalObjectStatusException("Member already exists");
         }
-
-        MemberPO memberPO = MemberMapper.INSTANCE.memberToMemberPo(member);
+        MemberMapper memberMapper = new MemberMapper() {};
+        MemberPO memberPO = memberMapper.memberToMemberPo(member);
         memberPO.setIp(MemberService.stringToInetAddress(accessIp));
 
         saveMember(memberPO);
@@ -301,7 +311,9 @@ public class MemberService {
     }
 
     public String getJWTToken(MemberUserDetails user) {
-        return jwtService.createLoginAccessToken(user);
+        String jwt = jwtService.createLoginAccessToken(user);
+        redisTemplate.opsForValue().set(user.getUsername(),jwt, Duration.ofMillis(90000)); // 一分半後過期
+        return jwt;
     }
 
     public void validateWithJWTToken() {
@@ -314,6 +326,11 @@ public class MemberService {
         System.out.printf("嗨，你的帳號：%s%n權限：%s%n",
                 userDetails.getUsername(),
                 userDetails.getAuthorities());
+
+        String redisValue = (String) redisTemplate.opsForValue().get(userDetails.getUsername());
+        System.out.println("Redis value = " + redisValue);
+        redisTemplate.delete(userDetails.getUsername());
+
 //        改由filter實作了
 //        Map<String, Object> jwtResult;
 //        String jwt = authorization.substring(BEARER_PREFIX.length());

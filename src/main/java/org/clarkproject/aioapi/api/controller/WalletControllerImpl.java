@@ -5,6 +5,8 @@ import org.clarkproject.aioapi.api.obj.dto.TransactionInfo;
 import org.clarkproject.aioapi.api.obj.po.WalletTransactionPO;
 import org.clarkproject.aioapi.api.service.WalletService;
 import org.clarkproject.aioapi.api.exception.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -241,4 +243,6 @@ public class WalletControllerImpl implements WalletController{
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
+
+
 }

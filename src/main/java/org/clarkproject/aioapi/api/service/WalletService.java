@@ -8,6 +8,8 @@ import org.clarkproject.aioapi.api.obj.po.WalletTransactionPO;
 import org.clarkproject.aioapi.api.repository.WalletRepository;
 import org.clarkproject.aioapi.api.repository.WalletTransactionRepository;
 import org.clarkproject.aioapi.api.exception.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
 public class WalletService {
 
     private final MemberService memberService;

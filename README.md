@@ -3,6 +3,13 @@
 這個專案是用來總結自己的後端技術的，順便把自己在工作中學到的技能做一個總整理，發想取自於
 https://github.com/PureFuncInc/pure-backend-practice?tab=readme-ov-file
 
+docker run -d --name "MongoDB_4.4.29" -p 27017:27017 mongo:4.4.29
+docker run -d --hostname my-rabbit --name some-rabbit -e RABBITMQ_DEFAULT_USER=user -e RABBITMQ_DEFAULT_P
+ASS=password -p 5672:5672 rabbitmq:3-management
+docker run --name practice -p 5432:5432 -e POSTGRES_PASSWORD=123456 -d postgres
+docker run --name some-redis -p 6379:6379 -d redis
+
+
 ## 目錄
 - [背景](#背景)
 - [功能](#功能)

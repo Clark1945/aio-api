@@ -2,6 +2,7 @@ package org.clarkproject.aioapi.api.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
 import org.clarkproject.aioapi.api.obj.dto.APIResponse;
 import org.clarkproject.aioapi.api.obj.dto.LoginResponse;
@@ -18,7 +19,9 @@ import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.clarkproject.aioapi.api.tool.UserIdIdentity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -167,7 +170,7 @@ public class MemberControllerImpl implements MemberController {
         APIResponse apiResponse;
         Optional<MemberPO> memberPO = memberService.findAccountById(id);
         if (memberPO.isPresent()) {
-            Member member = MemberMapper.INSTANCE.memberPOToMember(memberPO.get());
+            Member member = new MemberMapper() {}.memberPOToMember(memberPO.get());
             apiResponse = new APIResponse(ResponseStatusMessage.SUCCESS.getValue(), "successfully find member", member);
             return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
         } else {

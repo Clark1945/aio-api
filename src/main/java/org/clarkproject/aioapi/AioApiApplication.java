@@ -13,5 +13,4 @@ public class AioApiApplication {
     public static void main(String[] args) {
         SpringApplication.run(AioApiApplication.class, args);
     }
-
 }
