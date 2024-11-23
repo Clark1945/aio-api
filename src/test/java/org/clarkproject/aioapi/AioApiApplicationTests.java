@@ -1,10 +1,8 @@
 package org.clarkproject.aioapi;
 
-import org.clarkproject.aioapi.api.obj.dto.Member;
 import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
 import org.clarkproject.aioapi.api.service.MemberService;
-import org.clarkproject.aioapi.api.tool.MemberMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -13,7 +11,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
 
@@ -32,7 +29,7 @@ class AioApiApplicationTests {
     void optionalTest1() {
         Mockito.when(memberRepository.findByAccount(Mockito.isNull())).thenReturn(null);
         Optional<MemberPO> memberPO1 = memberService.findActiveAccount(null);
-        assert !memberPO1.isPresent();
+        assert memberPO1.isEmpty();
     }
 
     // Optional API 功能測試
@@ -42,7 +39,7 @@ class AioApiApplicationTests {
         memberPOTest.setStatus("INACTIVE");
         Mockito.when(memberRepository.findByAccount(Mockito.isNull())).thenReturn(memberPOTest);
         Optional<MemberPO> memberPO1 = memberService.findActiveAccount(null);
-        assert !memberPO1.isPresent();
+        assert memberPO1.isEmpty();
     }
 
 //    @Autowired 此測試適用Reactive 應用程式
@@ -78,11 +75,11 @@ class AioApiApplicationTests {
 
     // Mockito 功能測試
     @Test
-    void testGetMember() throws Exception {
+    void testGetMember() {
         MemberPO memberPO = new MemberPO();
         memberPO.setStatus("ACTIVE");
         memberPO.setName("Clark");
-        Mockito.when(memberRepository.findById(1L)).thenReturn(Optional.ofNullable(memberPO));
+        Mockito.when(memberRepository.findById(1L)).thenReturn(Optional.of(memberPO));
     }
 
     // Mockito 功能測試

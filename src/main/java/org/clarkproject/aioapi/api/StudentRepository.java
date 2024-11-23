@@ -22,7 +22,6 @@ public interface StudentRepository extends MongoRepository<Student, String> {
     List<Student> findByBirthdayBefore(LocalDate to);
 
     List<Student> findByContactEmailOrContactPhone(String email, String phone);
-    List<Student> findByGradeBetween(Range<Integer> range);
     List<Student> findAllByOrderByGradeDesc();
 
     @Query("{}")

@@ -18,8 +18,11 @@ import java.util.Optional;
 @RestController
 public class StudentController {
 
-    @Autowired
-    private StudentRepository studentRepository;
+    public StudentController(StudentRepository studentRepository) {
+        this.studentRepository = studentRepository;
+    }
+
+    private final StudentRepository studentRepository;
 
     @PostMapping("/students")
     public ResponseEntity<Void> createStudent(@RequestBody Student student) {

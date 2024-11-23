@@ -13,8 +13,11 @@ import java.util.TimeZone;
 @Component
 public class TenMinuteJob {
 
-    @Autowired
-    private AccessLogService accessLogService;
+    public TenMinuteJob(AccessLogService accessLogService) {
+        this.accessLogService = accessLogService;
+    }
+    
+    private final AccessLogService accessLogService;
 
     TimeZone timeZone = TimeZone.getTimeZone("America/Los_Angeles");
 

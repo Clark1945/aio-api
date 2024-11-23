@@ -21,7 +21,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 
 /**
  * Swagger API 文件 因為不想要把文件直接寫在Controller，所以提取出來了

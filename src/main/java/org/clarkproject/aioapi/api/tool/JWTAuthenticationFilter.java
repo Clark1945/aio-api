@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
-    private static final List<String> INCLUDE_PATHS = Arrays.asList("/api/1.0/login");
+    private static final List<String> INCLUDE_PATHS = List.of("/api/1.0/login");
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String BASIC_PREFIX = "Basic ";
     private final JWTService jwtService;

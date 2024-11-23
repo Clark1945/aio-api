@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 
@@ -63,7 +64,8 @@ public class WalletControllerImpl implements WalletController{
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
         }
         try {
-            BigDecimal amt = walletService.queryAccount(account).getAmt().setScale(0);
+            BigDecimal amt = walletService.queryAccount(account).getAmt().setScale(0, RoundingMode.CEILING);
+
             HashMap<String, Object> result = new HashMap<>();
             result.put("status", ResponseStatusMessage.SUCCESS.getValue());
             result.put("message", "Wallet query successfully");

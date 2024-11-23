@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Enumeration;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
@@ -61,7 +62,7 @@ public class LoggerAOP {
     }
 
     private String getRequestLog(JoinPoint joinPoint) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
 
         // 使用 Spring 提供的 ContentCachingRequestWrapper 包裝 HttpServletRequest (避免直接讀取InputStream)
         ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);

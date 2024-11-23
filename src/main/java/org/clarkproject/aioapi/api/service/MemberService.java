@@ -1,6 +1,5 @@
 package org.clarkproject.aioapi.api.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
 import org.clarkproject.aioapi.api.obj.MemberUserDetails;
@@ -29,7 +28,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.Optional;
 
 
@@ -37,9 +35,7 @@ import java.util.Optional;
 @Service
 public class MemberService {
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
+    private final RedisTemplate<String, String> redisTemplate;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserIdIdentity userIdentity;
@@ -51,12 +47,14 @@ public class MemberService {
                          PasswordEncoder passwordEncoder,
                          UserIdIdentity userIdentity,
                          AuthenticationManager authenticationManager,
-                         JWTService jwtService) {
+                         JWTService jwtService,
+                         RedisTemplate<String, String> redisTemplate) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.userIdentity = userIdentity;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.redisTemplate = redisTemplate;
     }
 
     /**
@@ -78,7 +76,6 @@ public class MemberService {
 
     /**
      * 根據登入密碼檢核判斷是否要鎖定帳戶
-     *
      * @param memberPO
      * @param isPasswordMeet
      */
