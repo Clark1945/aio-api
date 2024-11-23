@@ -91,3 +91,5 @@ If you manually switch to a different parent and actually want the inheritance, 
 #### http://localhost:8080/v3/api-docs api-doc 路徑
 #### @RepositoryRestResource 待研究 @SecurityRequirement 待研究
 #### @RestResource(exported = false) 待研究
+
+### Message Queue: Kafka、RabbitMQ 暫時不會用到，先註解

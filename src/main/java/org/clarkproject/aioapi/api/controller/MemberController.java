@@ -33,7 +33,7 @@ public interface MemberController {
             description = "Please use unique account name to register your account.",
             tags = {"Member"})
     @ApiResponses(value = {
-            @ApiResponse(description = "success", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = APIResponse.class))})
+            @ApiResponse(responseCode = "200", description = "success", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = APIResponse.class))})
     })
     @PostMapping(value = "/member", consumes = {"application/json"})
     ResponseEntity<APIResponse> register(@Parameter(description = "Register member") @Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException, IllegalObjectStatusException;
@@ -85,7 +85,7 @@ public interface MemberController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = APIResponse.class)),})
     })
     @GetMapping("/member")
-    ResponseEntity<APIResponse> getMember(@RequestParam("id") Long id);
+    ResponseEntity<APIResponse> getMember(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization);
 
     @Operation(summary = "Update member", description = "Update with Member", tags = {"Member"})
     @ApiResponses(value = {
@@ -104,7 +104,7 @@ public interface MemberController {
             @ApiResponse(responseCode = "400", description = "Invalid id supplied", content = @Content),
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content)})
     @PatchMapping("/member")
-    ResponseEntity<APIResponse> disableMember(@Parameter(description = "The id that needs to be disable.", required = true) @RequestParam Long id, HttpServletRequest request) throws ValidationException, IllegalObjectStatusException;
+    ResponseEntity<APIResponse> disableMember(HttpServletRequest request) throws ValidationException, IllegalObjectStatusException;
 
     @Operation(summary = "Froze number by ID", tags = {"Member"})
     @ApiResponses(value = {
@@ -114,7 +114,6 @@ public interface MemberController {
                     description = "successful operation", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "400", description = "Invalid username/password supplied", content = @Content)})
     @DeleteMapping("/member")
-    ResponseEntity<APIResponse> frozeMember(@NotNull @Parameter(description = "Request id") @RequestParam Long id,
-                                            @RequestParam Long adminId,
+    ResponseEntity<APIResponse> frozeMember(@NotNull @Parameter(description = "User Account") @RequestParam String account,
                                             HttpServletRequest request) throws ValidationException, IllegalObjectStatusException;
 }

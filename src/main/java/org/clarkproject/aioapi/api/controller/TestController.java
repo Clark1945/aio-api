@@ -12,7 +12,6 @@ public class TestController {
 
     @GetMapping("/Test")
     public String test() {
-//        redisTemplate.opsForSet().(key)
         redisTemplate.opsForSet().add("Set", "set");
         return "ADD";
     }

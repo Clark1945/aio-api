@@ -26,8 +26,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
-    private static final List<String> INCLUDE_PATHS = Arrays.asList("/api/1.0/loginWithJWTToken");
+    private static final List<String> INCLUDE_PATHS = Arrays.asList("/api/1.0/login");
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String BASIC_PREFIX = "Basic ";
     private final JWTService jwtService;
     private final MemberRepository memberRepository;
     public JWTAuthenticationFilter(JWTService jwtService, MemberRepository memberRepository) {
@@ -40,43 +41,47 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         // 取得 header
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+        if (authHeader == null || authHeader.startsWith(BASIC_PREFIX)) {
             filterChain.doFilter(request, response);
-        }
-        // 解析 JWT
-        String jwt = authHeader.substring(BEARER_PREFIX.length());
-        Claims claims;
-        try {
-            claims = jwtService.parseToken(jwt);
-        } catch (JwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+        if (authHeader.startsWith(BEARER_PREFIX)) { //JWT TOKEN
+            // 解析 JWT
+            String jwt = authHeader.substring(BEARER_PREFIX.length());
+            Claims claims;
+            try {
+                claims = jwtService.parseToken(jwt);
+            } catch (JwtException e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
 
-        // 建立 UserDetails 物件
-        MemberUserDetails userDetails = new MemberUserDetails(memberRepository.findByAccount(claims.get("username", String.class)));
-        userDetails.setUsername(claims.get("username", String.class));
+            // 建立 UserDetails 物件
+            MemberUserDetails userDetails = new MemberUserDetails(memberRepository.findByAccount(claims.get("username", String.class)));
+            userDetails.setUsername(claims.get("username", String.class));
 
-        List<String> memberAuthorities = ((ArrayList<LinkedHashMap<String,String>>) claims.get("authorities"))
-                .stream()
-                .map( a -> a.get("authority"))
-                .collect(Collectors.toList());
+            List<String> memberAuthorities = ((ArrayList<LinkedHashMap<String,String>>) claims.get("authorities"))
+                    .stream()
+                    .map( a -> a.get("authority"))
+                    .collect(Collectors.toList());
 
-        userDetails.setMemberAuthorities(memberAuthorities);
+            userDetails.setMemberAuthorities(memberAuthorities);
 
-        // 放入 Security Context
-        Authentication token = new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities()
-        );
-        SecurityContextHolder.getContext().setAuthentication(token);
+            // 放入 Security Context
+            Authentication token = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+            );
+            SecurityContextHolder.getContext().setAuthentication(token);
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+        }
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        return !INCLUDE_PATHS.contains(request.getServletPath());
-    }
+    // 需直接排除清單
+//    @Override
+//    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+//        return !INCLUDE_PATHS.contains(request.getServletPath());
+//    }
 }

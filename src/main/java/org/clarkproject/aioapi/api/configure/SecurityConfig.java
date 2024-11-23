@@ -3,6 +3,7 @@ package org.clarkproject.aioapi.api.configure;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import lombok.extern.slf4j.Slf4j;
+import org.clarkproject.aioapi.api.obj.enums.MemberRole;
 import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
 import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.clarkproject.aioapi.api.repository.MemberRepository;
@@ -77,9 +78,9 @@ public class SecurityConfig {
         return httpSecurity
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(HttpMethod.POST, "/api/1.0/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/1.0/loginWithBasicToken").hasAuthority("USER")
-                        .requestMatchers(HttpMethod.POST, "/api/1.0/member").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/swagger-ui/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/1.0/loginWithBasicToken").hasAnyAuthority(MemberRole.ADMIN.name(),MemberRole.USER.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/1.0/member").hasAuthority(MemberRole.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/swagger-ui/*").permitAll()
                         .anyRequest().permitAll()
                 )
                 .csrf(AbstractHttpConfigurer::disable) // disable CSRF

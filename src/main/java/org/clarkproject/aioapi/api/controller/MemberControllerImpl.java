@@ -3,6 +3,7 @@ package org.clarkproject.aioapi.api.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.clarkproject.aioapi.api.exception.IllegalObjectStatusException;
 import org.clarkproject.aioapi.api.obj.dto.APIResponse;
 import org.clarkproject.aioapi.api.obj.dto.LoginResponse;
@@ -38,6 +39,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/1.0")
+@Slf4j
 public class MemberControllerImpl implements MemberController {
 
     private final MemberService memberService;
@@ -46,6 +48,9 @@ public class MemberControllerImpl implements MemberController {
         this.memberService = memberService;
     }
 
+    //TODO 密碼加密存放DB
+    //TODO 二階段 認證
+    //TODO 密碼複雜度驗證
     @PostMapping(value = "/member", consumes = {"application/json"})
     public ResponseEntity<APIResponse> register(@Valid @RequestBody Member member, HttpServletRequest request) throws ValidationException, IllegalObjectStatusException {
         String accessIp = request.getRemoteAddr();
@@ -75,6 +80,7 @@ public class MemberControllerImpl implements MemberController {
      * @return
      * @throws ValidationException
      */
+    //TODO 若二階段登入可提供Token
     @PostMapping("/login")
     public ResponseEntity<APIResponse> login(@RequestBody LoginObject member, HttpServletRequest request) throws ValidationException, IllegalObjectStatusException {
         String accessIp = request.getRemoteAddr();
@@ -116,9 +122,9 @@ public class MemberControllerImpl implements MemberController {
         APIResponse apiResponse;
 
         String userName = memberService.validateWithBasicToken();
-
         MemberPO memberPO = memberService.findActiveAccount(userName)
                 .orElseThrow(() -> new IllegalObjectStatusException("account not available"));
+
         try {
             memberService.updateMemberStatus(memberPO, true);
         } catch (Exception e) {
@@ -166,11 +172,12 @@ public class MemberControllerImpl implements MemberController {
     }
 
     @GetMapping("/member")
-    public ResponseEntity<APIResponse> getMember(@RequestParam("id") Long id) {
+    public ResponseEntity<APIResponse> getMember(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
+        MemberPO memberPO = memberService.validateWithJWTToken();
+
         APIResponse apiResponse;
-        Optional<MemberPO> memberPO = memberService.findAccountById(id);
-        if (memberPO.isPresent()) {
-            Member member = new MemberMapper() {}.memberPOToMember(memberPO.get());
+        if (memberPO != null && memberPO.getStatus().equals(MemberStatus.ACTIVE.name())) {
+            Member member = MemberMapper.memberPOToMember(memberPO);
             apiResponse = new APIResponse(ResponseStatusMessage.SUCCESS.getValue(), "successfully find member", member);
             return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
         } else {
@@ -180,13 +187,19 @@ public class MemberControllerImpl implements MemberController {
     }
 
     @PutMapping("/member")
-    public ResponseEntity<APIResponse> updateMember(@RequestBody Member member, HttpServletRequest request) throws ValidationException, IllegalObjectStatusException {
+    public ResponseEntity<APIResponse> updateMember(@RequestBody Member newMember,HttpServletRequest request) throws ValidationException, IllegalObjectStatusException {
         String accessIp = request.getRemoteAddr();
         APIResponse apiResponse;
-        Member.updateValidate(member);
+        MemberPO memberPO = memberService.validateWithJWTToken();
 
-        boolean isUpdated = memberService.update(member, accessIp);
-        if (isUpdated) {
+        boolean updateResult = false;
+        try {
+            memberService.update(memberPO, newMember,accessIp);
+            updateResult = true;
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (updateResult) {
             apiResponse = new APIResponse(ResponseStatusMessage.SUCCESS.getValue(), "Member successfully updated");
             return ResponseEntity
                     .status(HttpStatus.ACCEPTED)
@@ -200,14 +213,12 @@ public class MemberControllerImpl implements MemberController {
     }
 
     @PatchMapping("/member")
-    public ResponseEntity<APIResponse> disableMember(@RequestParam Long id, HttpServletRequest request) throws ValidationException, IllegalObjectStatusException {
+    public ResponseEntity<APIResponse> disableMember(HttpServletRequest request) throws ValidationException, IllegalObjectStatusException {
         String accessIp = request.getRemoteAddr();
         APIResponse apiResponse;
+        MemberPO memberPO = memberService.validateWithJWTToken();
 
-        if (id == null) {
-            throw new ValidationException("id is null");
-        }
-        boolean isDisableSuccess = memberService.disableMember(id, accessIp);
+        boolean isDisableSuccess = memberService.disableMember(memberPO, accessIp);
         if (isDisableSuccess) {
             apiResponse = new APIResponse(ResponseStatusMessage.SUCCESS.getValue(), "Member disabled");
             return ResponseEntity
@@ -222,16 +233,16 @@ public class MemberControllerImpl implements MemberController {
     }
 
     @DeleteMapping("/member")
-    public ResponseEntity<APIResponse> frozeMember(@RequestParam Long id,
-                                                   @RequestParam Long adminId,
+    public ResponseEntity<APIResponse> frozeMember(String account,
                                                    HttpServletRequest request) throws ValidationException, IllegalObjectStatusException {
-        String accessIp = request.getRemoteAddr();
-        APIResponse apiResponse;
 
-        if (id == null || adminId == null) {
-            throw new ValidationException("id is null");
+        APIResponse apiResponse;
+        memberService.validateWithJWTToken();
+
+        if (account == null ) {
+            throw new ValidationException("account is null");
         }
-        boolean isDisableSuccess = memberService.frozeMember(id, accessIp, adminId);
+        boolean isDisableSuccess = memberService.frozeMember(account);
         if (isDisableSuccess) {
             apiResponse = new APIResponse(ResponseStatusMessage.SUCCESS.getValue(), "Member frozed");
             return ResponseEntity

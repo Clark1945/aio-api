@@ -27,6 +27,7 @@ class AioApiApplicationTests {
     @Autowired
     MemberService memberService;
 
+    // Optional API 功能測試
     @Test
     void optionalTest1() {
         Mockito.when(memberRepository.findByAccount(Mockito.isNull())).thenReturn(null);
@@ -34,6 +35,7 @@ class AioApiApplicationTests {
         assert !memberPO1.isPresent();
     }
 
+    // Optional API 功能測試
     @Test
     void optionalTest2() {
         MemberPO memberPOTest = new MemberPO();
@@ -43,7 +45,7 @@ class AioApiApplicationTests {
         assert !memberPO1.isPresent();
     }
 
-//    @Autowired
+//    @Autowired 此測試適用Reactive 應用程式
 //    private ApplicationContext applicationContext;
 //    @Mock
 //    MemberRepository memberRepository;
@@ -74,40 +76,23 @@ class AioApiApplicationTests {
 //                });
 //    }
 
-    @Autowired
-    private MockMvc mockMvc;
-
+    // Mockito 功能測試
     @Test
     void testGetMember() throws Exception {
         MemberPO memberPO = new MemberPO();
         memberPO.setStatus("ACTIVE");
         memberPO.setName("Clark");
         Mockito.when(memberRepository.findById(1L)).thenReturn(Optional.ofNullable(memberPO));
-
-//        mockMvc.perform(get("/api/1.0/member")
-//                        .param("id", "1")
-//                        .accept(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$.info.name").value("Clark"));
     }
 
+    // Mockito 功能測試
     @Test
-    public void testLombok() {
+    public void testMockito() {
         MemberPO memberPO = new MemberPO();
         memberPO.setStatus("ACTIVE");
         memberPO.setName("Clark");
 
-        assert memberPO.getStatus() == "ACTIVE";
+        assert Objects.equals(memberPO.getStatus(), "ACTIVE");
         assert memberPO.getName().equals("Clark");
-    }
-
-    @Test
-    public void testMapstruct() {
-        Member member = new Member();
-        member.setPhone("123456");
-        MemberMapper memberMapper = new MemberMapper() {};
-        MemberPO m = memberMapper.memberToMemberPo(member);
-        assert member.getPhone().equals("123456") ;
     }
 }

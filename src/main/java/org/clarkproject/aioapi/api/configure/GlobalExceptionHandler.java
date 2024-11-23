@@ -22,7 +22,6 @@ import static org.clarkproject.aioapi.api.configure.APIErrorMessage.*;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-
     @ExceptionHandler({ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleValidationException(ValidationException e) {
@@ -43,7 +42,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problemDetail.setProperty("errorCategory", GENERIC_LEVEL);
         problemDetail.setProperty("errorCode",INCORRECT_ACCOUNT_ERROR_CODE);
         problemDetail.setProperty("message", INCORRECT_OPERATION_MSG);
-
         problemDetail.setProperty("timestamp", Instant.now());
         return problemDetail;
     }

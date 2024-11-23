@@ -45,7 +45,7 @@ public class BeanConfig {
                         .title(documentTitle)
                         .version(appVersion)
                         .license(new License()
-                                .name("My Github")
+                                .name("My Github Page")
                                 .url("https://clark1945.github.io/"))
                         .description("This is my demo API side project for future interview.")
                         .contact(new Contact()
@@ -56,11 +56,11 @@ public class BeanConfig {
                 );
     }
 
-    @Bean
-    public LettuceConnectionFactory lettuceConnectionFactory() {
+
+    public LettuceConnectionFactory lettuceConnectionFactory(String redisHost,int redisPort) {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-        config.setHostName("127.0.0.1");
-        config.setPort(6379); // Redis的預設埠號
+        config.setHostName(redisHost);
+        config.setPort(redisPort); // Redis的預設埠號
         config.setPassword(""); // 放Redis的密碼，這裡暫時沒有設
         config.setDatabase(0);
 
@@ -77,14 +77,17 @@ public class BeanConfig {
                         .commandTimeout(Duration.ofMillis(3000))
                         .poolConfig(poolConfig)
                         .build();
-
-        return new LettuceConnectionFactory(config, poolingClientConfig);
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(config, poolingClientConfig);
+        factory.afterPropertiesSet();
+        return factory;
     }
 
     @Bean
-    public RedisTemplate<String, String> redisTemplate() {
+    public RedisTemplate<String, String> redisTemplate(
+            @Value("${redis.hostname}") String redisHost,
+            @Value("${redis.port}") int redisPort) {
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(lettuceConnectionFactory()); //建立與Redis的連接
+        redisTemplate.setConnectionFactory(lettuceConnectionFactory(redisHost,redisPort)); //建立與Redis的連接
         redisTemplate.setDefaultSerializer(
                 new Jackson2JsonRedisSerializer<>(Object.class)); // 轉換Java物件格式與Redis儲存格式
         redisTemplate.setEnableTransactionSupport(true); // 加入交易

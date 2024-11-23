@@ -4,6 +4,7 @@ import org.clarkproject.aioapi.api.obj.dto.Member;
 import org.clarkproject.aioapi.api.obj.enums.MemberRole;
 import org.clarkproject.aioapi.api.obj.enums.MemberStatus;
 import org.clarkproject.aioapi.api.obj.po.MemberPO;
+import org.clarkproject.aioapi.api.service.MemberService;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -13,7 +14,7 @@ public abstract class MemberMapper {
     /**
      * 將 Member 轉換為 MemberPO
      */
-    public MemberPO memberToMemberPo(Member member) {
+    public static MemberPO memberToMemberPo(Member member,String accessIp) {
         if (member == null) {
             return null;
         }
@@ -27,7 +28,7 @@ public abstract class MemberMapper {
         memberPO.setAddress(member.getAddress());
         memberPO.setBirthdate(member.getBirthday());
 
-        setDefaultValues(memberPO, member);
+        setDefaultValues(memberPO,accessIp);
 
         return memberPO;
     }
@@ -35,7 +36,7 @@ public abstract class MemberMapper {
     /**
      * 將 MemberPO 轉換為 Member
      */
-    public Member memberPOToMember(MemberPO memberPO) {
+    public static Member memberPOToMember(MemberPO memberPO) {
         if (memberPO == null) {
             return null;
         }
@@ -55,13 +56,10 @@ public abstract class MemberMapper {
     /**
      * 設置默認值的方法
      */
-    public void setDefaultValues(MemberPO memberPO, Member member) {
-        if (memberPO.getRole() == null) {
-            memberPO.setRole(MemberRole.USER.name());
-        }
-        if (memberPO.getStatus() == null) {
-            memberPO.setStatus(MemberStatus.ACTIVE.name());
-        }
+    public static void setDefaultValues(MemberPO memberPO, String accessIp) {
+        memberPO.setRole(MemberRole.USER.name());
+        memberPO.setStatus(MemberStatus.ACTIVE.name());
+        memberPO.setIp(MemberService.stringToInetAddress(accessIp));
     }
 
     /**
