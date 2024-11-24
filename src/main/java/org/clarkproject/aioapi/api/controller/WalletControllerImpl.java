@@ -1,8 +1,11 @@
 package org.clarkproject.aioapi.api.controller;
 
+import org.clarkproject.aioapi.api.obj.dto.APIResponse;
 import org.clarkproject.aioapi.api.obj.enums.ResponseStatusMessage;
 import org.clarkproject.aioapi.api.obj.dto.TransactionInfo;
+import org.clarkproject.aioapi.api.obj.po.MemberPO;
 import org.clarkproject.aioapi.api.obj.po.WalletTransactionPO;
+import org.clarkproject.aioapi.api.service.MemberService;
 import org.clarkproject.aioapi.api.service.WalletService;
 import org.clarkproject.aioapi.api.exception.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,63 +25,47 @@ import java.util.List;
 public class WalletControllerImpl implements WalletController{
 
     private final WalletService walletService;
-
-    public WalletControllerImpl(WalletService walletService) {
+    private final MemberService memberService;
+    public WalletControllerImpl(WalletService walletService, MemberService memberService) {
         this.walletService = walletService;
+        this.memberService = memberService;
     }
 
     @PostMapping("/wallet")
-    public ResponseEntity openWallet(@RequestBody HashMap<String, String> reqMap) {
-        String account = reqMap.get("account");
-        if (account == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
-        }
-
+    public ResponseEntity<APIResponse> openWallet() {
+        APIResponse apiResponse;
+        MemberPO memberPO = memberService.validateWithJWTToken();
         try {
-            boolean isOpen = walletService.openWallet(account);
-            if (isOpen) {
-                HashMap<String, String> result = new HashMap<>();
-                result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-                result.put("message", "Wallet open successfully");
-                return ResponseEntity
-                        .ok()
-                        .body(result);
-            } else {
-                HashMap<String, String> error = new HashMap<>();
-                error.put("status", ResponseStatusMessage.ERROR.getValue());
-                error.put("message", "Wallt open Fail!");
-                return ResponseEntity
-                        .badRequest()
-                        .body(error);
-            }
+            walletService.openWallet(memberPO);
+            apiResponse = new APIResponse(ResponseStatusMessage.SUCCESS.getValue(), "Wallet open successfully");
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
         } catch (ValidationException e) {
             e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            apiResponse = new APIResponse(ResponseStatusMessage.ERROR.getValue(), "Wallt open Fail!");
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(apiResponse);
         }
     }
 
     @GetMapping("/wallet")
-    public ResponseEntity checkWalletBalance(@RequestBody HashMap<String, String> reqMap) {
-        String account = reqMap.get("account");
-        if (account == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account is null");
-        }
+    public ResponseEntity<APIResponse> checkWalletBalance() {
+        APIResponse apiResponse;
+        MemberPO memberPO = memberService.validateWithJWTToken();
         try {
-            BigDecimal amt = walletService.queryAccount(account).getAmt().setScale(0, RoundingMode.CEILING);
+            BigDecimal amt = walletService.queryAccount(memberPO).getAmt().setScale(0, RoundingMode.CEILING);
 
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("status", ResponseStatusMessage.SUCCESS.getValue());
-            result.put("message", "Wallet query successfully");
             HashMap<String, Object> map = new HashMap<>();
             map.put("balance", amt);
-            result.put("info", map);
-            return ResponseEntity.ok().body(result);
+            apiResponse = new APIResponse(ResponseStatusMessage.SUCCESS.getValue(), "Wallet query successfully", map);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
         } catch (ValidationException e) {
             e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
+    //TODO 以下API待重構
     @PostMapping("/deposit")
     public ResponseEntity deposit(@RequestBody TransactionInfo transactionInfo) {
         try {

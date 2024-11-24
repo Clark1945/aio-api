@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.clarkproject.aioapi.api.obj.dto.APIResponse;
 import org.clarkproject.aioapi.api.obj.dto.TransactionInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public interface WalletController {
                     content = @Content(mediaType = "application/json"))
     })
     @PostMapping("/wallet")
-    ResponseEntity openWallet(@RequestBody HashMap<String, String> reqMap);
+    ResponseEntity<APIResponse> openWallet();
 
     @Operation(summary = "Check Wallet Balance",
             description = "Check the balance of the given wallet account.",
@@ -38,7 +39,7 @@ public interface WalletController {
                     content = @Content(mediaType = "application/json"))
     })
     @GetMapping("/wallet")
-    ResponseEntity checkWalletBalance(@RequestBody HashMap<String, String> reqMap);
+    ResponseEntity<APIResponse> checkWalletBalance();
 
     @Operation(summary = "Deposit to Wallet",
             description = "Deposit a specified amount to the given wallet account.",

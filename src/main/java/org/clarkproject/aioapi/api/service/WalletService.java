@@ -35,27 +35,18 @@ public class WalletService {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public boolean openWallet(String account) throws ValidationException {
-        MemberPO memberPO = memberService.findActiveAccount(account)
-                .orElseThrow(() -> new ValidationException("account not available"));
+    public void openWallet(MemberPO memberPO) throws ValidationException {
 
         WalletPO walletPO = new WalletPO();
         walletPO.setAmt(new BigDecimal(0));
         walletPO.setStatus(WalletStatus.ACTIVE.name());
-        try {
-            WalletPO walletPO1 = walletRepository.save(walletPO);
-            memberPO.setWalletId((walletPO1.getId()));
-            memberService.saveMember(memberPO);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+
+        WalletPO walletPO1 = walletRepository.save(walletPO);
+        memberPO.setWalletId((walletPO1.getId()));
+        memberService.saveMember(memberPO);
     }
 
-    public WalletPO queryAccount(String account) throws ValidationException {
-        MemberPO memberPO = memberService.findActiveAccount(account)
-                .orElseThrow(() -> new ValidationException("account not available"));
+    public WalletPO queryAccount(MemberPO memberPO) throws ValidationException {
 
         Optional<WalletPO> walletPO = walletRepository.findById(memberPO.getWalletId());
         walletPO.orElseThrow(() -> new ValidationException("wallet not available"));
